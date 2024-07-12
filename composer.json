@@ -1,0 +1,32 @@
+{
+    "name": "ilias/maestro",
+    "type": "library",
+    "version": "1.0.0",
+    "description": "A PHP object-oriented postgres database manager",
+    "keywords": [
+        "postgres",
+        "orm",
+        "pgsql"
+    ],
+    "homepage": "https://github.com/iloElias/maestro",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ilias\\Maestro\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Murilo Elias",
+            "email": "murilo7456@gmail.com"
+        },
+        {
+            "name": "Divino Henrique",
+            "email": "dhenriquearantes@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.0.0"
+    },
+    "minimum-stability": "stable"
+}
