@@ -7,18 +7,18 @@ use DateTime;
 class Utils
 {
   private const PHP_TO_POSTGRES_TYPE_MAP = [
-    "int" => "integer",
-    "integer" => "integer",
-    "float" => "real",
-    "double" => "double precision",
-    "string" => "text",
-    "bool" => "boolean",
-    "boolean" => "boolean",
-    "array" => "json",
-    "object" => "json",
-    "DateTime" => "timestamp",
-    "NULL" => "null",
-    "unknown type" => "null",
+    "int" => "INTEGER",
+    "integer" => "INTEGER",
+    "float" => "NUMERIC",
+    "double" => "DOUBLE PRECISION",
+    "string" => "TEXT",
+    "bool" => "BOOLEAN",
+    "boolean" => "BOOLEAN",
+    "array" => "JSON",
+    "object" => "JSON",
+    "DateTime" => "TIMESTAMP",
+    "NULL" => "NULL",
+    "unknown type" => "NULL",
   ];
 
   public static function getPostgresType(string $phpType)

@@ -7,5 +7,6 @@ use Ilias\Maestro\Abstract\Schema;
 final class Hr extends Schema
 {
   public User $user;
-  public ShoppingCar $shoppingCar;
+  public ShoppingCart $shoppingCart;
+  public UserShoppingCart $userShoppingCar;
 }

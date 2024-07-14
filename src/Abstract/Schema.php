@@ -36,7 +36,7 @@ abstract class Schema extends Sanitizable
     return $tablesMap;
   }
 
-  public static function prettyPrint(bool $label = true, bool $class = true)
+  public static function prettyPrint()
   {
     $tables = self::getTables();
     foreach ($tables as $tableName => $tableClass) {

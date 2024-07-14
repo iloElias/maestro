@@ -4,17 +4,19 @@ namespace Ilias\Maestro\Abstract;
 
 abstract class Table extends Sanitizable
 {
-  public Schema $schema;
   public int $id;
-
-  public function __construct(Schema $schema)
-  {
-    $this->schema = $schema;
-  }
 
   public static function getTableName(): string
   {
     return static::class;
+  }
+
+  public static function getTableSchemaAddress(): string
+  {
+    $reflection = new \ReflectionClass(static::class);
+    $tableSchema = $reflection->getProperty("schema");
+    $tableName = self::getSanitizedName();
+    return "\"{$tableSchema}\".\"{$tableName}\"";
   }
 
   public static function getColumns(): array
@@ -22,8 +24,9 @@ abstract class Table extends Sanitizable
     $reflection = new \ReflectionClass(static::class);
     $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
     $columns = [];
+
     foreach ($properties as $property) {
-      if ($property->getName() !== 'schema' && $property->getName() !== 'id') {
+      if ($property->getName() !== 'schema') {
         $columns[$property->getName()] = $property->getType()->getName();
       }
     }
