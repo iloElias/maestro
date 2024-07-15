@@ -10,14 +10,58 @@ use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Database\Insert;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Database\Update;
+use Ilias\Maestro\Interface\PostgresFunction;
 use Ilias\Maestro\Utils\Utils;
 
+/**
+ * Class Database
+ *
+ * This class provides methods to create and manage a PostgreSQL database schema,
+ * including creating schemas, tables, and foreign key constraints. It also provides
+ * methods to insert, update, and select data from tables.
+ *
+ * @package Ilias\Maestro\Core
+ */
 class Database
 {
-  public function createSchema(Schema $schema): string
+  public static array $idCreationPattern = [
+    "SERIAL",
+    "PRIMARY KEY"
+  ];
+
+  public function createDatabase(\Ilias\Maestro\Abstract\Database $database): array
   {
-    $schemaName = $schema::getSchemaName();
-    return "CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\"";
+    $sql = [];
+    $schemas = $database::getSchemas();
+    foreach ($schemas as $schemaClass) {
+      $schema = new $schemaClass();
+      $sql[] = $this->createSchema($schema);
+    }
+
+    foreach ($schemas as $schemaClass) {
+      $schema = new $schemaClass();
+      $sql = [...$sql, ...$this->createTablesForSchema($schema)];
+    }
+
+    return $sql;
+  }
+
+  public function createSchema(Schema | string $schema): string
+  {
+    if (gettype($schema) === "string" && is_subclass_of($schema, Schema::class)) {
+      if (!Utils::isFinalClass($schema)) {
+        throw new NotFinalExceptions("The " . Utils::sanitizeForPostgres($schema) . " class was not identified as \"final\"");
+      }
+
+      $schemaName = call_user_func("{$schema}::getSanitizedName");
+      return "CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\";";
+    }
+    if (!Utils::isFinalClass($schema::class)) {
+      throw new NotFinalExceptions("The " . Utils::sanitizeForPostgres($schema) . " class was not identified as \"final\"");
+    }
+
+    $schemaName = $schema::getSanitizedName();
+    return "CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\";";
   }
 
   public function createTablesForSchema(Schema $schema): array
@@ -26,17 +70,16 @@ class Database
     $sql = [];
 
     $tables = $schema::getTables();
-    foreach ($tables as $tableName => $tableClass) {
+    foreach ($tables as $tableClass) {
       $sql[] = $this->createTable($tableClass);
     }
-    foreach ($tables as $tableName => $tableClass) {
+    foreach ($tables as $tableClass) {
       $sql = array_merge($sql, $this->createForeignKeyConstraints($tableClass));
     }
 
     return $sql;
   }
 
-  // TODO: find some way to identify if the column is `UNIQUE`
   public function createTable(string $table): string
   {
     if (!Utils::isFinalClass($table)) {
@@ -45,26 +88,47 @@ class Database
 
     $tableName = $table::getSanitizedName();
     $columns = $table::getColumns();
+    $uniqueColumns = $table::getUniqueColumns();
     $schemaName = $this->getSchemaNameFromTable($table);
 
     $columnDefs = [];
     $primaryKey = 'id';
     $reflectionClass = new \ReflectionClass($table);
 
+    if (isset($columns[$primaryKey])) {
+      $idColumnDef = Utils::sanitizeForPostgres($primaryKey) . " " . implode(" ", self::$idCreationPattern);
+      $columnDefs[] = $idColumnDef;
+      unset($columns[$primaryKey]);
+    }
+
     foreach ($columns as $name => $type) {
       if (is_subclass_of($type, Table::class)) {
         $type = 'integer';
       }
 
-      $columnDef = Utils::sanitizeForPostgres($name) . " " . (($name === "id") ? "SERIAL PRIMARY KEY" : $this->getColumnType($type));
+      $sanitizedColumnName = Utils::sanitizeForPostgres($name);
+
+      $columnType = is_array($type) ? $this->getColumnType($type[0]) : $this->getColumnType($type);
+
+      $columnDef = "$sanitizedColumnName $columnType";
 
       if ($this->isPropertyNotNull($reflectionClass, $name)) {
         $columnDef .= " NOT NULL";
+      } else {
+        $columnDef .= " NULL";
       }
 
       $defaultValue = $this->getPropertyDefaultValue($reflectionClass, $name);
       if ($defaultValue !== null) {
-        $columnDef .= " DEFAULT " . $this->formatDefaultValue($defaultValue);
+        if (is_array($type) && $type[1] === PostgresFunction::class) {
+          $columnDef .= " DEFAULT {$defaultValue}";
+        } else {
+          $columnDef .= " DEFAULT " . $this->formatDefaultValue($defaultValue);
+        }
+      }
+
+      if (in_array($name, $uniqueColumns)) {
+        $columnDef .= " UNIQUE";
       }
 
       $columnDefs[] = $columnDef;
@@ -82,13 +146,14 @@ class Database
     $tableName = $table::getSanitizedName();
     $columns = $table::getColumns();
     $constraints = [];
-    $reflectionClass = new \ReflectionClass($table);
 
     foreach ($columns as $name => $type) {
       if (is_subclass_of($type, Table::class)) {
         $referencedTable = $type::getSanitizedName();
         $referencedSchema = $this->getSchemaNameFromTable($type);
-        $constraints[] = "ALTER TABLE \"{$schemaName}\".\"{$tableName}\" ADD CONSTRAINT fk_{$tableName}_{$name} FOREIGN KEY (\"" . Utils::sanitizeForPostgres($name) . "\") REFERENCES \"{$referencedSchema}\".\"{$referencedTable}\"(\"id\");";
+
+        $sanitizedName = Utils::sanitizeForPostgres($name);
+        $constraints[] = "ALTER TABLE \"{$schemaName}\".\"{$tableName}\" ADD CONSTRAINT fk_{$tableName}_{$sanitizedName} FOREIGN KEY (\"{$sanitizedName}\") REFERENCES \"{$referencedSchema}\".\"{$referencedTable}\"(\"id\");";
       }
     }
 

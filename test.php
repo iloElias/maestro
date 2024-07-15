@@ -3,13 +3,16 @@
 require_once 'vendor/autoload.php';
 
 use Ilias\Maestro\Core\Database;
-use Ilias\Maestro\TestClasses\Hr;
-use Ilias\Maestro\TestClasses\MaestroDb;
+use Maestro\Example\Hr;
+use Maestro\Example\MaestroDb;
+use Maestro\Example\User;
 
 // var_dump(MaestroDb::dumpDatabase());
 // MaestroDb::prettyPrint();
 
 $coreDatabase = new Database();
-$hrSchema = new Hr();
+$maestroDb = new MaestroDb();
 
-echo implode("\n", $coreDatabase->createTablesForSchema($hrSchema));
+echo implode("\n", $coreDatabase->createDatabase($maestroDb)) . "\n";
+
+// echo $coreDatabase->createTable(User::class) . "\n";

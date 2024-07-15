@@ -15,7 +15,7 @@ class Insert implements Sql
   public function into(string $table)
   {
     try {
-      $this->table = call_user_func($table . "::getTableSchemaAddress");
+      $this->table = call_user_func("{$table}::getTableSchemaAddress");
     } catch (\Throwable) {
       $this->table = $table;
     }

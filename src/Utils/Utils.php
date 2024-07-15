@@ -17,8 +17,7 @@ class Utils
     "array" => "JSON",
     "object" => "JSON",
     "DateTime" => "TIMESTAMP",
-    "NULL" => "NULL",
-    "unknown type" => "NULL",
+    "unknown type" => "text",
   ];
 
   public static function getPostgresType(string $phpType)

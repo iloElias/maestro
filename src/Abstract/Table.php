@@ -27,9 +27,16 @@ abstract class Table extends Sanitizable
 
     foreach ($properties as $property) {
       if ($property->getName() !== 'schema') {
-        $columns[$property->getName()] = $property->getType()->getName();
+        try {
+          $columns[$property->getName()] = $property->getType()->getName();
+        } catch (\Throwable) {
+          foreach ($property->getType()->getTypes() as $type) {
+            $columns[$property->getName()][] = (string)$type;
+          }
+        }
       }
     }
+
     return $columns;
   }
 
@@ -38,10 +45,16 @@ abstract class Table extends Sanitizable
     return self::getColumns();
   }
 
-  public static function prettyPrint() {
+  public static function prettyPrint()
+  {
     $columns = self::getColumns();
     foreach ($columns as $columnName => $columnType) {
       echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
     }
+  }
+
+  public static function getUniqueColumns(): array
+  {
+    return [];
   }
 }

@@ -12,7 +12,8 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Ilias\\Maestro\\": "src/"
+            "Ilias\\Maestro\\": "src/",
+            "Maestro\\Example\\": "example/"
         }
     },
     "authors": [
