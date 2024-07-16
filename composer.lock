@@ -4,11 +4,50 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eb342bfd9199f4f0b080b5e62909e774",
-    "packages": [],
+    "content-hash": "464c9d909e8fab70ac6227d56fd0e55d",
+    "packages": [
+        {
+            "name": "ilias/dotenv",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/iloElias/dotenv.git",
+                "reference": "8ff01f17a931a1749a8cf8d954d00e1be47fb012"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/iloElias/dotenv/zipball/8ff01f17a931a1749a8cf8d954d00e1be47fb012",
+                "reference": "8ff01f17a931a1749a8cf8d954d00e1be47fb012",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "default-branch": true,
+            "type": "project",
+            "autoload": {
+                "psr-4": {
+                    "Ilias\\Dotenv\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "Murilo Elias",
+                    "email": "murilo7456@gmail.com"
+                }
+            ],
+            "description": "A PHP dotenv reader",
+            "support": {
+                "issues": "https://github.com/iloElias/dotenv/issues",
+                "source": "https://github.com/iloElias/dotenv/tree/master"
+            },
+            "time": "2024-07-16T23:31:44+00:00"
+        }
+    ],
     "packages-dev": [],
     "aliases": [],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
