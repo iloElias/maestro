@@ -3,7 +3,7 @@
 namespace Maestro\Example;
 use Ilias\Maestro\Abstract\Schema;
 
-final class Hr extends Schema
+final class Social extends Schema
 {
-  public User $user;
+
 }

@@ -22,7 +22,7 @@ use Ilias\Maestro\Utils\Utils;
  *
  * @package Ilias\Maestro\Core
  */
-class Database
+class Manager
 {
   public static array $idCreationPattern = [
     "SERIAL",
