@@ -37,12 +37,12 @@ class PDOConnection
   public static function getInstance(): \PDO
   {
     if (self::$pdo === null) {
-      self::$sqlDatabase = Helper::env("DB_SQL");
-      self::$host = Helper::env("DB_HOST");
-      self::$port = Helper::env("DB_PORT");
-      self::$databaseName = Helper::env("DB_NAME");
-      self::$username = Helper::env("DB_USER");
-      self::$password = Helper::env("DB_PASS");
+      self::$sqlDatabase = Helper::env("DB_SQL") ?? "pgsql";
+      self::$host = Helper::env("DB_HOST") ?? "localhost";
+      self::$port = Helper::env("DB_PORT") ?? "5432";
+      self::$databaseName = Helper::env("DB_NAME") ?? "postgres";
+      self::$username = Helper::env("DB_USER") ?? "postgres";
+      self::$password = Helper::env("DB_PASS") ?? "";
 
       self::$dns = self::$sqlDatabase . ":host=" . self::$host . ";port=" . self::$port . ";dbname=" . self::$databaseName . ";user=" . self::$username . ";password=" . self::$password;
       self::$pdo = new \PDO(self::$dns);
