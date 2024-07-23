@@ -44,7 +44,7 @@ class Select implements Sql
     return $this;
   }
 
-  public function where($condition, $parameters = [])
+  public function where(string $condition, $parameters = [])
   {
     $this->wheres[] = $condition;
     $this->parameters = array_merge($this->parameters, $parameters);

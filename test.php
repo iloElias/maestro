@@ -2,17 +2,15 @@
 
 require_once 'vendor/autoload.php';
 
-use Ilias\Maestro\Core\Database;
-use Maestro\Example\Hr;
-use Maestro\Example\MaestroDb;
-use Maestro\Example\User;
+use Ilias\Maestro\Core\Manager;
+use Maestro\Example\MarkfyDb;
 
 // var_dump(MaestroDb::dumpDatabase());
 // MaestroDb::prettyPrint();
 
-$coreDatabase = new Database();
-$maestroDb = new MaestroDb();
+$coreDatabase = new Manager();
+$maestroDb = new MarkfyDb();
 
-echo implode("\n", $coreDatabase->createDatabase($maestroDb)) . "\n";
+print implode("\n", $coreDatabase->createDatabase($maestroDb)) . "\n";
 
 // echo $coreDatabase->createTable(User::class) . "\n";

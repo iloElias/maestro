@@ -11,7 +11,7 @@ class Update implements Sql
   private $wheres = [];
   private $parameters = [];
 
-  public function table($table)
+  public function table(string $table)
   {
     try {
       $this->table = call_user_func("{$table}::getTableSchemaAddress");
@@ -22,14 +22,14 @@ class Update implements Sql
     return $this;
   }
 
-  public function set($column, $value)
+  public function set(string $column, $value)
   {
     $this->sets[$column] = $value;
     $this->parameters[$column] = $value;
     return $this;
   }
 
-  public function where($condition, $parameters = [])
+  public function where(string $condition, array $parameters = [])
   {
     $this->wheres[] = $condition;
     $this->parameters = array_merge($this->parameters, $parameters);

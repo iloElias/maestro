@@ -107,7 +107,6 @@ class Manager
       }
 
       $sanitizedColumnName = Utils::sanitizeForPostgres($name);
-
       $columnType = is_array($type) ? $this->getColumnType($type[0]) : $this->getColumnType($type);
 
       $columnDef = "$sanitizedColumnName $columnType";
@@ -140,7 +139,7 @@ class Manager
     return $query;
   }
 
-  private function createForeignKeyConstraints(string $table): array
+  public function createForeignKeyConstraints(string $table): array
   {
     $schemaName = $this->getSchemaNameFromTable($table);
     $tableName = $table::getSanitizedName();
@@ -160,7 +159,7 @@ class Manager
     return $constraints;
   }
 
-  private function getSchemaNameFromTable($table): string
+  public function getSchemaNameFromTable($table): string
   {
     $reflectionClass = new \ReflectionClass($table);
     $schemaProperty = $reflectionClass->getProperty('schema');
@@ -168,7 +167,7 @@ class Manager
     return Utils::sanitizeForPostgres((new \ReflectionClass($schemaClass))->getShortName());
   }
 
-  private function isPropertyNotNull(\ReflectionClass $reflectionClass, string $propertyName): bool
+  public function isPropertyNotNull(\ReflectionClass $reflectionClass, string $propertyName): bool
   {
     $constructor = $reflectionClass->getConstructor();
     if ($constructor) {
@@ -182,7 +181,7 @@ class Manager
     return false;
   }
 
-  private function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName)
+  public function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName)
   {
     $property = $reflectionClass->getProperty($propertyName);
     if ($property->isDefault() && $property->isPublic()) {
@@ -192,7 +191,7 @@ class Manager
     return null;
   }
 
-  private function formatDefaultValue(mixed $value): string
+  public function formatDefaultValue(mixed $value): string
   {
     if (is_string($value)) {
       return "'" . addslashes($value) . "'";
@@ -202,7 +201,7 @@ class Manager
     return (string)$value;
   }
 
-  private function getColumnType(string $type): string
+  public function getColumnType(string $type): string
   {
     return Utils::getPostgresType($type);
   }
@@ -249,6 +248,6 @@ class Manager
       $stmt = $pdo->prepare($sql->getSql());
       $stmt->execute($sql->getParameters());
     }
-    return $stmt;
+    return $stmt !== false;
   }
 }
