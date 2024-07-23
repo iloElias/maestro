@@ -4,28 +4,19 @@ namespace Ilias\Maestro\Database;
 
 use Ilias\Maestro\Interface\Sql;
 
-class Update implements Sql
+class Delete implements Sql
 {
   private $table;
-  private $set = [];
   private $where = [];
   private $parameters = [];
 
-  public function table(string $table): Update
+  public function from(string $table): Delete
   {
     $this->table = $table;
     return $this;
   }
 
-  public function set(string $column, $value): Update
-  {
-    $paramName = ":$column";
-    $this->set[$column] = $paramName;
-    $this->parameters[$paramName] = $value;
-    return $this;
-  }
-
-  public function where(array $conditions): Update
+  public function where(array $conditions): Delete
   {
     foreach ($conditions as $column => $value) {
       $paramName = ":where_$column";
@@ -35,7 +26,7 @@ class Update implements Sql
     return $this;
   }
 
-  public function in(array $conditions): Update
+  public function in(array $conditions): Delete
   {
     foreach ($conditions as $column => $value) {
       $inParams = array_map(function ($v, $k) use ($column) {
@@ -51,10 +42,9 @@ class Update implements Sql
 
   public function getSql(): string
   {
-    $setClause = implode(", ", array_map(fn ($k, $v) => "$k = $v", array_keys($this->set), $this->set));
     $whereClause = implode(" AND ", $this->where);
 
-    return "UPDATE {$this->table} SET $setClause" . ($whereClause ? " WHERE $whereClause" : "");;
+    return "DELETE FROM {$this->table}" . ($whereClause ? " WHERE $whereClause" : "");
   }
 
   public function getParameters(): array

@@ -134,43 +134,6 @@ class DatabaseManagerTest extends TestCase
     $this->assertEquals($expectedColumnType, $this->manager->getColumnType($type));
   }
 
-  public function testInsertIntoTable()
-  {
-    $table = new User("nickname", "email", "password", true, new \DateTime());
-    $data = ["nickname" => "nickname", "email" => "email", "password" => "password", "active" => true, "createdIn" => new \DateTime()];
-
-    $insert = $this->manager->insertIntoTable($table, $data);
-
-    $this->assertInstanceOf(Insert::class, $insert);
-  }
-
-  public function testUpdateTable()
-  {
-    $table = new User("nickname", "email", "password", true, new \DateTime());
-    $data = ["nickname" => "updated_nickname"];
-    $conditions = ["email" => "email"];
-
-    $update = $this->manager->updateTable($table, $data, $conditions);
-
-    $this->assertInstanceOf(Update::class, $update);
-    $this->assertEquals("UPDATE user SET nickname = :nickname WHERE email = :email", $update->getSql());
-    $this->assertEquals(['nickname' => 'updated_nickname', 'email' => 'email'], $update->getParameters());
-  }
-
-
-  public function testSelectFromTable()
-  {
-    $table = new User("nickname", "email", "password", true, new \DateTime());
-    $columns = ["nickname", "email"];
-    $conditions = ["active" => true];
-
-    $select = $this->manager->selectFromTable($table, $columns, $conditions);
-
-    $this->assertInstanceOf(Select::class, $select);
-    $this->assertEquals("SELECT nickname, email FROM user WHERE active = :active", $select->getSql());
-    $this->assertEquals(['active' => true], $select->getParameters());
-  }
-
   public function testExecuteQuery()
   {
     $sql = "SELECT * FROM users";
@@ -180,54 +143,3 @@ class DatabaseManagerTest extends TestCase
     $this->assertTrue($stmt);
   }
 }
-
-
-// <?php
-
-// namespace Tests\Unit;
-
-// use Ilias\Maestro\Core\Manager;
-// use Maestro\Example\TaggedUser;
-// use Maestro\Example\User;
-// use PHPUnit\Framework\TestCase;
-
-// use PDO;
-
-// class DatabaseManagerTest extends TestCase
-// {
-//   private $pdo;
-//   private $dbManager;
-
-//   protected function setUp(): void
-//   {
-//     $this->pdo = $this->createMock(PDO::class);
-//     $this->dbManager = new Manager();
-//   }
-
-//   public function testCreateTable()
-//   {
-//     $expectedSql = "CREATE TABLE IF NOT EXISTS \"hr\".\"user\" (\n\tid SERIAL PRIMARY KEY,\n\tnickname TEXT NOT NULL UNIQUE,\n\temail TEXT NOT NULL UNIQUE,\n\tpassword TEXT NOT NULL,\n\tactive BOOLEAN NOT NULL DEFAULT TRUE,\n\tcreated_in TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\tupdated_in TIMESTAMP NULL,\n\tinactivated_in TIMESTAMP NULL\n);";
-
-//     $sql = $this->dbManager->createTable(User::class);
-//     $this->assertEquals($expectedSql, $sql);
-//   }
-
-//   public function testCreateForeignKeyConstraints()
-//   {
-//     $expectedConstraints = [
-//       "ALTER TABLE \"social\".\"tagged_user\" ADD CONSTRAINT fk_tagged_user_post_id FOREIGN KEY (\"post_id\") REFERENCES \"social\".\"post\"(\"id\");",
-//       "ALTER TABLE \"social\".\"tagged_user\" ADD CONSTRAINT fk_tagged_user_user_id FOREIGN KEY (\"user_id\") REFERENCES \"hr\".\"user\"(\"id\");",
-//     ];
-
-//     $constraints = $this->dbManager->createForeignKeyConstraints(TaggedUser::class);
-//     $this->assertEquals($expectedConstraints, $constraints);
-//   }
-
-//   public function testGetSchemaNameFromTable()
-//   {
-//     $expectedSchemaName = 'hr';
-
-//     $schemaName = $this->dbManager->getSchemaNameFromTable(User::class);
-//     $this->assertEquals($expectedSchemaName, $schemaName);
-//   }
-// }

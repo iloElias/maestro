@@ -3,7 +3,6 @@
 namespace Ilias\Maestro\Database;
 
 use Ilias\Dotenv\Helper;
-use Ilias\Maestro\Core\Environment;
 
 class PDOConnection
 {
@@ -23,7 +22,19 @@ class PDOConnection
 
   private static ?\PDO $pdo = null;
 
-  public static function getPdoInstance(): \PDO
+  private function __construct()
+  {
+  }
+
+  private function __clone()
+  {
+  }
+
+  private function __wakeup()
+  {
+  }
+
+  public static function getInstance(): \PDO
   {
     if (self::$pdo === null) {
       self::$sqlDatabase = Helper::env("DB_SQL");

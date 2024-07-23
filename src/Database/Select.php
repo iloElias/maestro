@@ -6,94 +6,81 @@ use Ilias\Maestro\Interface\Sql;
 
 class Select implements Sql
 {
-  private $select = [];
-  private $from = '';
-  private $joins = [];
-  private $wheres = [];
-  private $orderBys = [];
-  private $limit = '';
-  private $parameters = [];
+  private string $from;
+  private array $columns = [];
+  private array $joins = [];
+  private array $where = [];
+  private array $order = [];
+  private array $parameters = [];
 
-  public function select(...$columns)
+  public function select(...$columns): Select
   {
-    $this->select = array_merge($this->select, $columns);
+    $this->columns = $columns;
     return $this;
   }
 
-  public function from(string $table)
+  public function from(string $table): Select
   {
-    try {
-      $this->from = call_user_func("{$table}::getTableSchemaAddress");
-    } catch (\Throwable) {
-      $this->from = $table;
+    $this->from = $table;
+    return $this;
+  }
+
+  public function join(string $table, string $condition, string $type = 'INNER'): Select
+  {
+    $this->joins[] = strtoupper($type) . " JOIN " . $table . " ON " . $condition;
+    return $this;
+  }
+
+  public function where(array $conditions)
+  {
+    foreach ($conditions as $column => $value) {
+      $sanitizedColumn = str_replace('.', '_', $column);
+      $paramName = ":where_$sanitizedColumn";
+      $this->where[] = "{$column} = {$paramName}";
+      $this->parameters[$paramName] = $value;
     }
-
     return $this;
   }
 
-  public function join(string $type, array $tableAndAlias, string $condition)
+  public function in(array $conditions): Select
   {
-    [$table] = $tableAndAlias;
-    [$alias] = array_flip($tableAndAlias);
-    try {
-      $table = call_user_func("{$table}::getTableSchemaAddress");
-    } catch (\Throwable) {
+    foreach ($conditions as $column => $value) {
+      $inParams = array_map(function ($v, $k) use ($column) {
+        $paramName = ":in_{$column}_{$k}";
+        $this->parameters[$paramName] = $v;
+        return $paramName;
+      }, $value, array_keys($value));
+      $inList = implode(",", $inParams);
+      $this->where[] = "{$column} IN({$inList})";
     }
-
-    $this->joins[] = strtoupper($type) . " JOIN {$table} AS {$alias} ON {$condition}";
     return $this;
   }
 
-  public function where(string $condition, $parameters = [])
+  public function order(string $column, string $direction = 'ASC'): Select
   {
-    $this->wheres[] = $condition;
-    $this->parameters = array_merge($this->parameters, $parameters);
-    return $this;
-  }
-
-  public function orderBy($column, $direction = 'ASC')
-  {
-    $this->orderBys[] = "$column $direction";
-    return $this;
-  }
-
-  public function limit($limit)
-  {
-    $this->limit = "LIMIT $limit";
+    $this->order[] = "$column $direction";
     return $this;
   }
 
   public function getSql(): string
   {
-    $sql = [];
+    $columns = implode(", ", $this->columns);
+    $joins = implode(" ", $this->joins);
+    $whereClause = implode(" AND ", $this->where);
+    $orderClause = implode(", ", $this->order);
 
-    if (!empty($this->select)) {
-      $sql[] = "SELECT " . implode(", ", $this->select);
-    } else {
-      $sql[] = "SELECT *";
+    $sql = "SELECT $columns FROM {$this->from}";
+    if ($joins) {
+      $sql .= " " . $joins;
+    }
+    if ($whereClause) {
+      $sql .= " WHERE " . $whereClause;
+    }
+    if ($orderClause) {
+      $sql .= " ORDER BY " . $orderClause;
     }
 
-    if (!empty($this->from)) {
-      $sql[] = "FROM " . $this->from;
-    }
-
-    if (!empty($this->joins)) {
-      $sql[] = implode(" ", $this->joins);
-    }
-
-    if (!empty($this->wheres)) {
-      $sql[] = "WHERE " . implode(" AND ", $this->wheres);
-    }
-
-    if (!empty($this->orderBys)) {
-      $sql[] = "ORDER BY " . implode(", ", $this->orderBys);
-    }
-
-    if (!empty($this->limit)) {
-      $sql[] = $this->limit;
-    }
-
-    return implode(" ", $sql);
+    return $sql;
   }
 
   public function getParameters(): array

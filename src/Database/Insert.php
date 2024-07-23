@@ -12,7 +12,7 @@ class Insert implements Sql
   private $values = [];
   private $parameters = [];
 
-  public function into(string $table)
+  public function into(string $table): Insert
   {
     try {
       $this->table = call_user_func("{$table}::getTableSchemaAddress");
@@ -23,20 +23,22 @@ class Insert implements Sql
     return $this;
   }
 
-  public function values(Table | array $data)
+  public function values(Table | array $data): Insert
   {
     if (is_subclass_of($data, Table::class)) {
       $tableColumns = $data::getColumns();
       foreach ($tableColumns as $column => $type) {
         $this->columns[] = $column;
-        $this->values[] = ":$column";
-        $this->parameters[$column] = $data->$column;
+        $paramName = ":$column";
+        $this->values[] = $paramName;
+        $this->parameters[$paramName] = $data->$column;
       }
     } elseif (is_array($data)) {
       foreach ($data as $column => $value) {
         $this->columns[] = $column;
-        $this->values[] = ":$column";
-        $this->parameters[$column] = $value;
+        $paramName = ":$column";
+        $this->values[] = $paramName;
+        $this->parameters[$paramName] = $value;
       }
     }
     return $this;

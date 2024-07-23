@@ -206,40 +206,6 @@ class Manager
     return Utils::getPostgresType($type);
   }
 
-  public function insertIntoTable(Table $table, Table | array $data): Insert
-  {
-    $insert = new Insert();
-    return $insert->into($table::getTableName())->values($data);
-  }
-
-  public function updateTable(Table $table, array $data, array $conditions): Update
-  {
-    $update = new Update();
-    $query = $update->table($table::getTableName());
-
-    foreach ($data as $column => $value) {
-      $query->set($column, $value);
-    }
-
-    foreach ($conditions as $condition => $params) {
-      $query->where($condition, $params);
-    }
-
-    return $query;
-  }
-
-  public function selectFromTable(Table $table, array $columns = ['*'], array $conditions = []): Select
-  {
-    $select = new Select();
-    $query = $select->select(...$columns)->from($table::getTableName());
-
-    foreach ($conditions as $condition => $params) {
-      $query->where($condition, $params);
-    }
-
-    return $query;
-  }
-
   public function executeQuery(PDO $pdo, Sql|string $sql)
   {
     if (is_string($sql)) {
