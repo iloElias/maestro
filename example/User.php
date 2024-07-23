@@ -9,8 +9,7 @@ use Ilias\Maestro\Interface\PostgresFunction;
 final class User extends Table
 {
   public Hr $schema;
-  public string $username;
-  public string $name;
+  public string $nickname;
   public string $email;
   public string $password;
   public bool $active = true;
@@ -19,15 +18,13 @@ final class User extends Table
   public DateTime $inactivatedIn;
 
   public function __construct(
-    string $username,
-    string $name,
+    string $nickname,
     string $email,
     string $password,
     bool $active,
     DateTime $createdIn
   ) {
-    $this->username = $username;
-    $this->name = $name;
+    $this->nickname = $nickname;
     $this->email = $email;
     $this->password = $password;
     $this->active = $active;
@@ -36,6 +33,6 @@ final class User extends Table
 
   public static function getUniqueColumns(): array
   {
-    return ["username", "email"];
+    return ["nickname", "email"];
   }
 }

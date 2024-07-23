@@ -22,7 +22,7 @@ use Ilias\Maestro\Utils\Utils;
  *
  * @package Ilias\Maestro\Core
  */
-class Database
+class Manager
 {
   public static array $idCreationPattern = [
     "SERIAL",
@@ -107,7 +107,6 @@ class Database
       }
 
       $sanitizedColumnName = Utils::sanitizeForPostgres($name);
-
       $columnType = is_array($type) ? $this->getColumnType($type[0]) : $this->getColumnType($type);
 
       $columnDef = "$sanitizedColumnName $columnType";
@@ -140,7 +139,7 @@ class Database
     return $query;
   }
 
-  private function createForeignKeyConstraints(string $table): array
+  public function createForeignKeyConstraints(string $table): array
   {
     $schemaName = $this->getSchemaNameFromTable($table);
     $tableName = $table::getSanitizedName();
@@ -160,7 +159,7 @@ class Database
     return $constraints;
   }
 
-  private function getSchemaNameFromTable($table): string
+  public function getSchemaNameFromTable($table): string
   {
     $reflectionClass = new \ReflectionClass($table);
     $schemaProperty = $reflectionClass->getProperty('schema');
@@ -168,7 +167,7 @@ class Database
     return Utils::sanitizeForPostgres((new \ReflectionClass($schemaClass))->getShortName());
   }
 
-  private function isPropertyNotNull(\ReflectionClass $reflectionClass, string $propertyName): bool
+  public function isPropertyNotNull(\ReflectionClass $reflectionClass, string $propertyName): bool
   {
     $constructor = $reflectionClass->getConstructor();
     if ($constructor) {
@@ -182,7 +181,7 @@ class Database
     return false;
   }
 
-  private function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName)
+  public function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName)
   {
     $property = $reflectionClass->getProperty($propertyName);
     if ($property->isDefault() && $property->isPublic()) {
@@ -192,7 +191,7 @@ class Database
     return null;
   }
 
-  private function formatDefaultValue(mixed $value): string
+  public function formatDefaultValue(mixed $value): string
   {
     if (is_string($value)) {
       return "'" . addslashes($value) . "'";
@@ -202,43 +201,9 @@ class Database
     return (string)$value;
   }
 
-  private function getColumnType(string $type): string
+  public function getColumnType(string $type): string
   {
     return Utils::getPostgresType($type);
-  }
-
-  public function insertIntoTable(Table $table, Table | array $data): Insert
-  {
-    $insert = new Insert();
-    return $insert->into($table::getTableName())->values($data);
-  }
-
-  public function updateTable(Table $table, array $data, array $conditions): Update
-  {
-    $update = new Update();
-    $query = $update->table($table::getTableName());
-
-    foreach ($data as $column => $value) {
-      $query->set($column, $value);
-    }
-
-    foreach ($conditions as $condition => $params) {
-      $query->where($condition, $params);
-    }
-
-    return $query;
-  }
-
-  public function selectFromTable(Table $table, array $columns = ['*'], array $conditions = []): Select
-  {
-    $select = new Select();
-    $query = $select->select(...$columns)->from($table::getTableName());
-
-    foreach ($conditions as $condition => $params) {
-      $query->where($condition, $params);
-    }
-
-    return $query;
   }
 
   public function executeQuery(PDO $pdo, Sql|string $sql)
@@ -249,6 +214,6 @@ class Database
       $stmt = $pdo->prepare($sql->getSql());
       $stmt->execute($sql->getParameters());
     }
-    return $stmt;
+    return $stmt !== false;
   }
 }

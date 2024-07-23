@@ -8,7 +8,7 @@ abstract class Table extends Sanitizable
 
   public static function getTableName(): string
   {
-    return static::class;
+    return self::getSanitizedName();
   }
 
   public static function getTableSchemaAddress(): string
