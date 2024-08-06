@@ -1,45 +1,47 @@
 {
-    "name": "ilias/maestro",
-    "type": "library",
-    "version": "1.0.0",
-    "description": "A PHP object-oriented postgres database manager",
-    "keywords": [
-        "postgres",
-        "orm",
-        "pgsql"
-    ],
-    "homepage": "https://github.com/iloElias/maestro",
+    "name": "ilias/choir",
+    "description": "A PHP HTTP requests handler template",
+    "type": "project",
     "license": "MIT",
+    "keywords": ["PHP", "HTTP", "requests", "handler", "template"],
+    "homepage": "https://github.com/ilias/choir",
     "autoload": {
-        "psr-4": {
-            "Ilias\\Maestro\\": "src/"
-        }
+      "psr-4": {
+        "Ilias\\Choir\\": "src/"
+      }
     },
     "autoload-dev": {
-        "psr-4": {
-            "Maestro\\Tests\\": "tests/",
-            "Maestro\\Example\\": "example/"
-        }
+      "psr-4": {
+        "Tests\\": "tests/"
+      }
     },
     "scripts": {
-        "phpunit": "vendor/bin/phpunit tests --colors"
+      "test": "phpunit"
     },
     "authors": [
-        {
-            "name": "Murilo Elias",
-            "email": "murilo7456@gmail.com"
-        },
-        {
-            "name": "Divino Henrique",
-            "email": "dhenriquearantes@gmail.com"
-        }
+      {
+        "name": "Murilo Elias",
+        "email": "murilo7456@gmail.com",
+        "homepage": "https://ilias.dev",
+        "role": "Developer"
+      }
     ],
     "require": {
-        "php": ">=8.0.0",
-        "ilias/dotenv": "dev-master"
+      "php": "^7.4 || ^8.0",
+      "ilias/rhetoric": "^1.0",
+      "ilias/opherator": "^1.0",
+      "ilias/maestro": "^1.0",
+      "ilias/dotenv": "^1.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.2"
+      "phpunit/phpunit": "^9.0"
     },
-    "minimum-stability": "dev"
-}
+    "config": {
+      "optimize-autoloader": true,
+      "preferred-install": "dist",
+      "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+  }
+  
