@@ -2,14 +2,13 @@
 
 namespace Ilias\Maestro\Core;
 
+use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Helpers\SchemaComparator;
 use PDO;
 use Ilias\Maestro\Exceptions\NotFinalExceptions;
 use Ilias\Maestro\Interface\Sql;
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Database\Insert;
-use Ilias\Maestro\Database\Select;
-use Ilias\Maestro\Database\Update;
 use Ilias\Maestro\Interface\PostgresFunction;
 use Ilias\Maestro\Utils\Utils;
 
@@ -28,6 +27,15 @@ class Manager
     "SERIAL",
     "PRIMARY KEY"
   ];
+
+  private PDO $pdo;
+  private SchemaComparator $schemaComparator;
+
+  public function __construct()
+  {
+    $this->pdo = PDOConnection::getInstance();
+    $this->schemaComparator = new SchemaComparator();
+  }
 
   public function createDatabase(\Ilias\Maestro\Abstract\Database $database): array
   {
@@ -215,5 +223,60 @@ class Manager
       $stmt->execute($sql->getParameters());
     }
     return $stmt !== false;
+  }
+
+  public function synchronizeSchema(Schema $schema): array
+  {
+    $schemaName = $schema::getSanitizedName();
+    $dbSchema = $this->schemaComparator->getDatabaseSchema($schemaName);
+    $definedSchema = $this->schemaComparator->getDefinedSchema($schema);
+    $differences = $this->schemaComparator->compareSchemas($dbSchema, $definedSchema);
+
+    $sqlStatements = $this->generateSqlStatements($differences, $schemaName);
+    $this->applySqlStatements($sqlStatements);
+
+    return $sqlStatements;
+  }
+
+  private function generateSqlStatements(array $differences, string $schemaName): array
+  {
+    $sqlStatements = [];
+
+    if (isset($differences['create'])) {
+      foreach ($differences['create'] as $tableName) {
+        $sqlStatements[] = $this->createTable($schemaName . '.' . $tableName);
+      }
+    }
+
+    if (isset($differences['add'])) {
+      foreach ($differences['add'] as $tableName => $columns) {
+        foreach ($columns as $column) {
+          $sqlStatements[] = "ALTER TABLE \"$schemaName\".\"$tableName\" ADD COLUMN \"{$column['column_name']}\" {$column['data_type']};";
+        }
+      }
+    }
+
+    if (isset($differences['remove'])) {
+      foreach ($differences['remove'] as $tableName => $columns) {
+        foreach ($columns as $column) {
+          $sqlStatements[] = "ALTER TABLE \"$schemaName\".\"$tableName\" DROP COLUMN \"$column\";";
+        }
+      }
+    }
+
+    if (isset($differences['drop'])) {
+      foreach ($differences['drop'] as $tableName) {
+        $sqlStatements[] = "DROP TABLE \"$schemaName\".\"$tableName\";";
+      }
+    }
+
+    return $sqlStatements;
+  }
+
+  private function applySqlStatements(array $sqlStatements)
+  {
+    foreach ($sqlStatements as $sql) {
+      $this->pdo->exec($sql);
+    }
   }
 }
