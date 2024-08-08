@@ -2,6 +2,7 @@
 
 namespace Ilias\Maestro\Core;
 
+use Ilias\Maestro\Abstract\Database;
 use Ilias\Maestro\Database\PDOConnection;
 use Ilias\Maestro\Helpers\SchemaComparator;
 use PDO;
@@ -28,8 +29,8 @@ class Manager
     "PRIMARY KEY"
   ];
 
-  private PDO $pdo;
-  private SchemaComparator $schemaComparator;
+  public PDO $pdo;
+  public SchemaComparator $schemaComparator;
 
   public function __construct()
   {
@@ -167,14 +168,6 @@ class Manager
     return $constraints;
   }
 
-  public function getSchemaNameFromTable($table): string
-  {
-    $reflectionClass = new \ReflectionClass($table);
-    $schemaProperty = $reflectionClass->getProperty('schema');
-    $schemaClass = $schemaProperty->getType()->getName();
-    return Utils::sanitizeForPostgres((new \ReflectionClass($schemaClass))->getShortName());
-  }
-
   public function isPropertyNotNull(\ReflectionClass $reflectionClass, string $propertyName): bool
   {
     $constructor = $reflectionClass->getConstructor();
@@ -228,30 +221,46 @@ class Manager
   public function synchronizeSchema(Schema $schema): array
   {
     $schemaName = $schema::getSanitizedName();
+    $this->createSchemaIfNotExists($schemaName);
+
     $dbSchema = $this->schemaComparator->getDatabaseSchema($schemaName);
     $definedSchema = $this->schemaComparator->getDefinedSchema($schema);
+
+    echo "DB Schema:\n";
+    print_r($dbSchema);
+    echo "Defined Schema:\n";
+    print_r($definedSchema);
+
     $differences = $this->schemaComparator->compareSchemas($dbSchema, $definedSchema);
 
-    $sqlStatements = $this->generateSqlStatements($differences, $schemaName);
+    echo "Differences:\n";
+    print_r($differences);
+
+    $sqlStatements = $this->generateSqlStatements($differences, $schema);
     $this->applySqlStatements($sqlStatements);
 
     return $sqlStatements;
   }
 
-  private function generateSqlStatements(array $differences, string $schemaName): array
+  public function generateSqlStatements(array $differences, Schema $schema): array
   {
     $sqlStatements = [];
+    $schemaName = $schema::getSanitizedName();
+    $tables = $schema::getTables();
 
     if (isset($differences['create'])) {
       foreach ($differences['create'] as $tableName) {
-        $sqlStatements[] = $this->createTable($schemaName . '.' . $tableName);
+        if (isset($tables[$tableName])) {
+          $sqlStatements[] = $this->createTable($tables[$tableName]);
+        }
       }
     }
 
     if (isset($differences['add'])) {
       foreach ($differences['add'] as $tableName => $columns) {
         foreach ($columns as $column) {
-          $sqlStatements[] = "ALTER TABLE \"$schemaName\".\"$tableName\" ADD COLUMN \"{$column['column_name']}\" {$column['data_type']};";
+          $columnType = $column['data_type'];
+          $sqlStatements[] = "ALTER TABLE \"$schemaName\".\"$tableName\" ADD COLUMN \"{$column['column_name']}\" $columnType;";
         }
       }
     }
@@ -273,10 +282,61 @@ class Manager
     return $sqlStatements;
   }
 
-  private function applySqlStatements(array $sqlStatements)
+  public function createSchemaIfNotExists(string $schemaName)
+  {
+    $sql = "CREATE SCHEMA IF NOT EXISTS \"$schemaName\"";
+    $this->pdo->exec($sql);
+  }
+
+  public function applySqlStatements(array $sqlStatements)
   {
     foreach ($sqlStatements as $sql) {
       $this->pdo->exec($sql);
     }
+  }
+
+  public function getSchemaNameFromTable($table): string
+  {
+    $reflectionClass = new \ReflectionClass($table);
+    $schemaProperty = $reflectionClass->getProperty('schema');
+    $schemaClass = $schemaProperty->getType()->getName();
+    return Utils::sanitizeForPostgres((new \ReflectionClass($schemaClass))->getShortName());
+  }
+
+  public function syncDatabase(Database $database): void
+  {
+    $schemas = $database::getSchemas();
+    foreach ($schemas as $schemaClass) {
+      $schema = new $schemaClass();
+      $sqlStatements = $this->synchronizeSchema($schema);
+      echo "Schema synchronized successfully for " . $schemaClass . ". SQL statements executed:" . PHP_EOL;
+      foreach ($sqlStatements as $sql) {
+        echo $sql . PHP_EOL;
+      }
+    }
+  }
+
+  public function initiateDatabase(Database $database): void
+  {
+    $schemas = $database::getSchemas();
+    foreach ($schemas as $schemaClass) {
+      $schema = new $schemaClass();
+      $this->createSchemaIfNotExists($schema::getSanitizedName());
+      $sqlStatements = [];
+      $tables = $schema::getTables();
+      foreach ($tables as $tableClass) {
+        $sqlStatements[] = $this->createTable($tableClass);
+      }
+      $this->applySqlStatements($sqlStatements);
+      echo "Database initiated successfully for " . $schemaClass . ". SQL statements executed:" . PHP_EOL;
+      foreach ($sqlStatements as $sql) {
+        echo $sql . PHP_EOL;
+      }
+    }
+  }
+
+  public function getSchemaComparator(): SchemaComparator
+  {
+    return $this->schemaComparator;
   }
 }

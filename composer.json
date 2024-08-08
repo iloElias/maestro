@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "phpunit": "vendor/bin/phpunit tests --colors"
+    "phpunit": "vendor/bin/phpunit tests --colors --display-warnings"
   },
   "authors": [
     {
@@ -33,6 +33,9 @@
       "name": "Divino Henrique",
       "email": "dhenriquearantes@gmail.com"
     }
+  ],
+  "bin": [
+    "bin/maestro"
   ],
   "require": {
     "php": ">=8.0.0",

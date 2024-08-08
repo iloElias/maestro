@@ -4,6 +4,7 @@ namespace Ilias\Maestro\Helpers;
 
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Database\PDOConnection;
+use PDO;
 
 class SchemaComparator
 {
@@ -14,20 +15,48 @@ class SchemaComparator
     $this->pdo = PDOConnection::getInstance();
   }
 
+  private function mapDataType(string $type): string
+  {
+      $typeMapping = [
+          'int' => 'integer',
+          'integer' => 'integer',
+          'string' => 'text',
+          'bool' => 'boolean',
+          'boolean' => 'boolean',
+          'DateTime' => 'timestamp without time zone',
+          'Ilias\Maestro\Interface\PostgresFunction' => 'timestamp without time zone'
+      ];
+  
+      if (class_exists($type)) {
+          return 'integer';
+      }
+  
+      return $typeMapping[$type] ?? $type;
+  }  
+
   public function getDatabaseSchema(string $schemaName): array
   {
-    $query = "SELECT table_name, column_name, data_type 
-              FROM information_schema.columns 
-              WHERE table_schema = :schema_name";
-    $stmt = $this->pdo->prepare($query);
-    $stmt->execute(['schema_name' => $schemaName]);
+    $stmt = $this->pdo->prepare(
+      "SELECT table_name, column_name, data_type
+      FROM information_schema.columns
+      WHERE table_schema = :schemaName
+      ORDER BY table_name, ordinal_position"
+    );
+    $stmt->execute([':schemaName' => $schemaName]);
 
     $schema = [];
-    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-      $schema[$row['table_name']][] = [
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $table = $row['table_name'];
+      $column = [
         'column_name' => $row['column_name'],
         'data_type' => $row['data_type']
       ];
+
+      if (!isset($schema[$table])) {
+        $schema[$table] = [];
+      }
+
+      $schema[$table][$row['column_name']] = $column;
     }
 
     return $schema;
@@ -39,12 +68,14 @@ class SchemaComparator
     $tables = $schema::getTables();
 
     foreach ($tables as $tableClass) {
-      $tableName = $tableClass::getTableName();
+      $tableName = $tableClass::getSanitizedName();
       $columns = $tableClass::getColumns();
+
       foreach ($columns as $columnName => $columnType) {
-        $definedSchema[$tableName][] = [
+        $dataType = is_array($columnType) ? $this->mapDataType($columnType[0]) : $this->mapDataType($columnType);
+        $definedSchema[$tableName][$columnName] = [
           'column_name' => $columnName,
-          'data_type' => $this->getColumnType($columnType)
+          'data_type' => $dataType
         ];
       }
     }
@@ -52,46 +83,49 @@ class SchemaComparator
     return $definedSchema;
   }
 
-  private function getColumnType(string $type): string
-  {
-    // Map PHP types to database types
-    $typeMap = [
-      'int' => 'integer',
-      'string' => 'text',
-      'bool' => 'boolean',
-      'DateTime' => 'timestamp'
-    ];
-
-    return $typeMap[$type] ?? $type;
-  }
-
   public function compareSchemas(array $dbSchema, array $definedSchema): array
   {
-    $differences = [];
+    $differences = [
+      'create' => [],
+      'add' => [],
+      'remove' => [],
+      'drop' => []
+    ];
 
-    foreach ($definedSchema as $tableName => $columns) {
+    foreach ($definedSchema as $tableName => $definedColumns) {
       if (!isset($dbSchema[$tableName])) {
         $differences['create'][] = $tableName;
-      } else {
-        foreach ($columns as $column) {
-          $dbColumns = array_column($dbSchema[$tableName], 'column_name');
-          if (!in_array($column['column_name'], $dbColumns)) {
-            $differences['add'][$tableName][] = $column;
+      }
+    }
+
+    foreach ($definedSchema as $tableName => $definedColumns) {
+      if (isset($dbSchema[$tableName])) {
+        $dbColumns = $dbSchema[$tableName];
+
+        foreach ($definedColumns as $definedColumn) {
+          $columnName = $definedColumn['column_name'];
+          $dbColumnType = $dbColumns[$columnName]['data_type'] ?? null;
+
+          if (!isset($dbColumns[$columnName])) {
+            $differences['add'][$tableName][] = $definedColumn;
+          } elseif ($dbColumnType !== $definedColumn['data_type']) {
+            $differences['remove'][$tableName][] = $columnName;
+            $differences['add'][$tableName][] = $definedColumn;
+          }
+        }
+
+        foreach ($dbColumns as $dbColumn) {
+          $columnName = $dbColumn['column_name'];
+          if (!isset($definedColumns[$columnName])) {
+            $differences['remove'][$tableName][] = $columnName;
           }
         }
       }
     }
 
-    foreach ($dbSchema as $tableName => $columns) {
+    foreach ($dbSchema as $tableName => $dbColumns) {
       if (!isset($definedSchema[$tableName])) {
         $differences['drop'][] = $tableName;
-      } else {
-        foreach ($columns as $column) {
-          $definedColumns = array_column($definedSchema[$tableName], 'column_name');
-          if (!in_array($column['column_name'], $definedColumns)) {
-            $differences['remove'][$tableName][] = $column['column_name'];
-          }
-        }
       }
     }
 

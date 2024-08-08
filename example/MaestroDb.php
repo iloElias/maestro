@@ -4,7 +4,7 @@ namespace Maestro\Example;
 
 use Ilias\Maestro\Abstract\Database;
 
-final class MarkfyDb extends Database
+final class MaestroDb extends Database
 {
   public Hr $hr;
   public Social $social;
