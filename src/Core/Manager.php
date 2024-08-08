@@ -31,14 +31,16 @@ class Manager
 
   public PDO $pdo;
   public SchemaComparator $schemaComparator;
+  private Synchronizer $synchronizer;
 
   public function __construct()
   {
     $this->pdo = PDOConnection::getInstance();
+    $this->synchronizer = new Synchronizer($this->pdo);
     $this->schemaComparator = new SchemaComparator();
   }
 
-  public function createDatabase(\Ilias\Maestro\Abstract\Database $database): array
+  public function createDatabase(Database $database): array
   {
     $sql = [];
     $schemas = $database::getSchemas();
@@ -182,6 +184,14 @@ class Manager
     return false;
   }
 
+  public function getSchemaNameFromTable($table): string
+  {
+    $reflectionClass = new \ReflectionClass($table);
+    $schemaProperty = $reflectionClass->getProperty('schema');
+    $schemaClass = $schemaProperty->getType()->getName();
+    return Utils::sanitizeForPostgres((new \ReflectionClass($schemaClass))->getShortName());
+  }
+
   public function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName)
   {
     $property = $reflectionClass->getProperty($propertyName);
@@ -207,6 +217,16 @@ class Manager
     return Utils::getPostgresType($type);
   }
 
+  public function synchronizeSchema(Schema $schema): array
+  {
+    return $this->synchronizer->synchronizeSchema($schema);
+  }
+
+  public function synchronizeDatabase(Database $database): array
+  {
+    return $this->synchronizer->synchronizeDatabase($database);
+  }
+
   public function executeQuery(PDO $pdo, Sql|string $sql)
   {
     if (is_string($sql)) {
@@ -216,127 +236,5 @@ class Manager
       $stmt->execute($sql->getParameters());
     }
     return $stmt !== false;
-  }
-
-  public function synchronizeSchema(Schema $schema): array
-  {
-    $schemaName = $schema::getSanitizedName();
-    $this->createSchemaIfNotExists($schemaName);
-
-    $dbSchema = $this->schemaComparator->getDatabaseSchema($schemaName);
-    $definedSchema = $this->schemaComparator->getDefinedSchema($schema);
-
-    echo "DB Schema:\n";
-    print_r($dbSchema);
-    echo "Defined Schema:\n";
-    print_r($definedSchema);
-
-    $differences = $this->schemaComparator->compareSchemas($dbSchema, $definedSchema);
-
-    echo "Differences:\n";
-    print_r($differences);
-
-    $sqlStatements = $this->generateSqlStatements($differences, $schema);
-    $this->applySqlStatements($sqlStatements);
-
-    return $sqlStatements;
-  }
-
-  public function generateSqlStatements(array $differences, Schema $schema): array
-  {
-    $sqlStatements = [];
-    $schemaName = $schema::getSanitizedName();
-    $tables = $schema::getTables();
-
-    if (isset($differences['create'])) {
-      foreach ($differences['create'] as $tableName) {
-        if (isset($tables[$tableName])) {
-          $sqlStatements[] = $this->createTable($tables[$tableName]);
-        }
-      }
-    }
-
-    if (isset($differences['add'])) {
-      foreach ($differences['add'] as $tableName => $columns) {
-        foreach ($columns as $column) {
-          $columnType = $column['data_type'];
-          $sqlStatements[] = "ALTER TABLE \"$schemaName\".\"$tableName\" ADD COLUMN \"{$column['column_name']}\" $columnType;";
-        }
-      }
-    }
-
-    if (isset($differences['remove'])) {
-      foreach ($differences['remove'] as $tableName => $columns) {
-        foreach ($columns as $column) {
-          $sqlStatements[] = "ALTER TABLE \"$schemaName\".\"$tableName\" DROP COLUMN \"$column\";";
-        }
-      }
-    }
-
-    if (isset($differences['drop'])) {
-      foreach ($differences['drop'] as $tableName) {
-        $sqlStatements[] = "DROP TABLE \"$schemaName\".\"$tableName\";";
-      }
-    }
-
-    return $sqlStatements;
-  }
-
-  public function createSchemaIfNotExists(string $schemaName)
-  {
-    $sql = "CREATE SCHEMA IF NOT EXISTS \"$schemaName\"";
-    $this->pdo->exec($sql);
-  }
-
-  public function applySqlStatements(array $sqlStatements)
-  {
-    foreach ($sqlStatements as $sql) {
-      $this->pdo->exec($sql);
-    }
-  }
-
-  public function getSchemaNameFromTable($table): string
-  {
-    $reflectionClass = new \ReflectionClass($table);
-    $schemaProperty = $reflectionClass->getProperty('schema');
-    $schemaClass = $schemaProperty->getType()->getName();
-    return Utils::sanitizeForPostgres((new \ReflectionClass($schemaClass))->getShortName());
-  }
-
-  public function syncDatabase(Database $database): void
-  {
-    $schemas = $database::getSchemas();
-    foreach ($schemas as $schemaClass) {
-      $schema = new $schemaClass();
-      $sqlStatements = $this->synchronizeSchema($schema);
-      echo "Schema synchronized successfully for " . $schemaClass . ". SQL statements executed:" . PHP_EOL;
-      foreach ($sqlStatements as $sql) {
-        echo $sql . PHP_EOL;
-      }
-    }
-  }
-
-  public function initiateDatabase(Database $database): void
-  {
-    $schemas = $database::getSchemas();
-    foreach ($schemas as $schemaClass) {
-      $schema = new $schemaClass();
-      $this->createSchemaIfNotExists($schema::getSanitizedName());
-      $sqlStatements = [];
-      $tables = $schema::getTables();
-      foreach ($tables as $tableClass) {
-        $sqlStatements[] = $this->createTable($tableClass);
-      }
-      $this->applySqlStatements($sqlStatements);
-      echo "Database initiated successfully for " . $schemaClass . ". SQL statements executed:" . PHP_EOL;
-      foreach ($sqlStatements as $sql) {
-        echo $sql . PHP_EOL;
-      }
-    }
-  }
-
-  public function getSchemaComparator(): SchemaComparator
-  {
-    return $this->schemaComparator;
   }
 }

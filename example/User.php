@@ -13,6 +13,7 @@ final class User extends Table
   public string $email;
   public string $password;
   public bool $active = true;
+  public bool $stillActive = true;
   public DateTime | PostgresFunction | string $createdIn = "CURRENT_TIMESTAMP";
   public DateTime $updatedIn;
   public DateTime $inactivatedIn;

@@ -2,6 +2,8 @@
 
 namespace Ilias\Maestro\Abstract;
 
+use Ilias\Maestro\Interface\PostgresFunction;
+
 abstract class Table extends Sanitizable
 {
   public int $id;
@@ -27,18 +29,38 @@ abstract class Table extends Sanitizable
 
     foreach ($properties as $property) {
       if ($property->getName() !== 'schema') {
-        try {
-          $columns[$property->getName()] = $property->getType()->getName();
-        } catch (\Throwable) {
-          foreach ($property->getType()->getTypes() as $type) {
-            $columns[$property->getName()][] = (string)$type;
+        $propertyType = $property->getType();
+        if ($propertyType instanceof \ReflectionUnionType) {
+          $types = $propertyType->getTypes();
+          foreach ($types as $type) {
+            if ($type->getName() !== PostgresFunction::class) {
+              $columns[$property->getName()] = $type->getName();
+              break;
+            }
           }
+        } else {
+          $columns[$property->getName()] = $propertyType->getName();
         }
       }
     }
 
     return $columns;
   }
+
+  public static function getTableCreationInfo(): array
+  {
+    return [
+      'tableName' => static::getSanitizedName(),
+      'columns' => static::getColumns()
+    ];
+  }
+
+  public static function getSanitizedName(): string
+  {
+    $reflect = new \ReflectionClass(static::class);
+    return strtolower($reflect->getShortName());
+  }
+
 
   public static function dumpTable(): array
   {

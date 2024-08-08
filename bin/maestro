@@ -37,52 +37,35 @@ $command = $argv[1];
 
 switch ($command) {
   case 'sync-schema':
-    // if ($argc < 3) {
-    //   showUsage('Error: No schema class provided.');
-    // }
+    if ($argc < 3) {
+      showUsage('Error: No schema class provided.');
+    }
 
-    // $schemaClass = $argv[2];
+    $schemaClass = $argv[2];
 
-    // if (!class_exists($schemaClass)) {
-    //   showUsage("Error: Schema class '$schemaClass' does not exist.");
-    // }
+    if (!class_exists($schemaClass)) {
+      showUsage("Error: Schema class '$schemaClass' does not exist.");
+    }
 
-    // try {
-    //   $manager = new Manager();
-    //   $schema = new $schemaClass();
-    //   $sqlStatements = $manager->synchronizeSchema($schema);
-    //   echo "Schema synchronized successfully. SQL statements executed:" . PHP_EOL;
-    //   foreach ($sqlStatements as $sql) {
-    //     echo $sql . PHP_EOL;
-    //   }
-    // } catch (Exception $e) {
-    //   echo "Error: " . $e->getMessage() . PHP_EOL;
-    //   exit(1);
-    // }
+    try {
+      $manager = new Manager();
+      $schema = new $schemaClass();
+      $sqlStatements = $manager->synchronizeSchema($schema);
+      if (!empty($sqlStatements)) {
+        echo "Schema synchronized successfully. SQL statements executed:" . PHP_EOL;
+        foreach ($sqlStatements as $sql) {
+          echo $sql . PHP_EOL;
+        }
+      } else {
+        echo "No changes detected. Schema is up to date." . PHP_EOL;
+      }
+    } catch (Exception $e) {
+      echo "Error: " . $e->getMessage() . PHP_EOL;
+      exit(1);
+    }
     break;
 
   case 'sync-database':
-    // if ($argc < 3) {
-    //   showUsage('Error: No database class provided.');
-    // }
-
-    // $databaseClass = $argv[2];
-
-    // if (!class_exists($databaseClass)) {
-    //   showUsage("Error: Database class '$databaseClass' does not exist.");
-    // }
-
-    // try {
-    //   $manager = new Manager();
-    //   $database = new $databaseClass();
-    //   $manager->syncDatabase($database);
-    // } catch (Exception $e) {
-    //   echo "Error: " . $e->getMessage() . PHP_EOL;
-    //   exit(1);
-    // }
-    break;
-
-  case 'initiate-database':
     if ($argc < 3) {
       showUsage('Error: No database class provided.');
     }
@@ -96,11 +79,40 @@ switch ($command) {
     try {
       $manager = new Manager();
       $database = new $databaseClass();
-      $manager->initiateDatabase($database);
+      $sqlStatements = $manager->synchronizeDatabase($database);
+      if (!empty($sqlStatements)) {
+        echo "Database synchronized successfully. SQL statements executed:" . PHP_EOL;
+        foreach ($sqlStatements as $sql) {
+          echo $sql . PHP_EOL;
+        }
+      } else {
+        echo "No changes detected. Database is up to date." . PHP_EOL;
+      }
     } catch (Exception $e) {
       echo "Error: " . $e->getMessage() . PHP_EOL;
       exit(1);
     }
+    break;
+
+  case 'initiate-database':
+    // if ($argc < 3) {
+    //   showUsage('Error: No database class provided.');
+    // }
+
+    // $databaseClass = $argv[2];
+
+    // if (!class_exists($databaseClass)) {
+    //   showUsage("Error: Database class '$databaseClass' does not exist.");
+    // }
+
+    // try {
+    //   $manager = new Manager();
+    //   $database = new $databaseClass();
+    //   $manager->initiateDatabase($database);
+    // } catch (Exception $e) {
+    //   echo "Error: " . $e->getMessage() . PHP_EOL;
+    //   exit(1);
+    // }
     break;
 
   case '-h':

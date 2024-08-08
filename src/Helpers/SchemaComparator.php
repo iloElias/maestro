@@ -2,6 +2,7 @@
 
 namespace Ilias\Maestro\Helpers;
 
+use DateTime;
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Database\PDOConnection;
 use PDO;
@@ -14,25 +15,6 @@ class SchemaComparator
   {
     $this->pdo = PDOConnection::getInstance();
   }
-
-  private function mapDataType(string $type): string
-  {
-      $typeMapping = [
-          'int' => 'integer',
-          'integer' => 'integer',
-          'string' => 'text',
-          'bool' => 'boolean',
-          'boolean' => 'boolean',
-          'DateTime' => 'timestamp without time zone',
-          'Ilias\Maestro\Interface\PostgresFunction' => 'timestamp without time zone'
-      ];
-  
-      if (class_exists($type)) {
-          return 'integer';
-      }
-  
-      return $typeMapping[$type] ?? $type;
-  }  
 
   public function getDatabaseSchema(string $schemaName): array
   {
@@ -62,7 +44,25 @@ class SchemaComparator
     return $schema;
   }
 
-  public function getDefinedSchema(Schema $schema): array
+  public function mapDataType(string $type): string
+  {
+    $typeMapping = [
+      'int' => 'integer',
+      'integer' => 'integer',
+      'string' => 'text',
+      'bool' => 'boolean',
+      'boolean' => 'boolean',
+      'DateTime' => 'timestamp without time zone'
+    ];
+
+    if (class_exists($type) && $type !== DateTime::class) {
+      return 'integer';
+    }
+
+    return $typeMapping[$type] ?? $type;
+  }
+
+  public function getDefinedSchema(\Ilias\Maestro\Abstract\Schema $schema): array
   {
     $definedSchema = [];
     $tables = $schema::getTables();
