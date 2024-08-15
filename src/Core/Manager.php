@@ -2,16 +2,15 @@
 
 namespace Ilias\Maestro\Core;
 
+use PDO;
+use Ilias\Maestro\Utils\Utils;
+use Ilias\Maestro\Interface\Sql;
+use Ilias\Maestro\Abstract\Table;
+use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Database;
 use Ilias\Maestro\Database\PDOConnection;
-use Ilias\Maestro\Helpers\SchemaComparator;
-use PDO;
-use Ilias\Maestro\Exceptions\NotFinalExceptions;
-use Ilias\Maestro\Interface\Sql;
-use Ilias\Maestro\Abstract\Schema;
-use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Interface\PostgresFunction;
-use Ilias\Maestro\Utils\Utils;
+use Ilias\Maestro\Exceptions\NotFinalExceptions;
 
 /**
  * Class Database
@@ -30,14 +29,10 @@ class Manager
   ];
 
   public PDO $pdo;
-  public SchemaComparator $schemaComparator;
-  private Synchronizer $synchronizer;
 
   public function __construct()
   {
     $this->pdo = PDOConnection::getInstance();
-    $this->synchronizer = new Synchronizer($this->pdo);
-    $this->schemaComparator = new SchemaComparator();
   }
 
   public function createDatabase(Database $database): array
@@ -118,7 +113,7 @@ class Manager
       }
 
       $sanitizedColumnName = Utils::sanitizeForPostgres($name);
-      $columnType = is_array($type) ? $this->getColumnType($type[0]) : $this->getColumnType($type);
+      $columnType = is_array($type) ? Utils::getPostgresType($type[0]) : Utils::getPostgresType($type);
 
       $columnDef = "$sanitizedColumnName $columnType";
 
@@ -212,20 +207,6 @@ class Manager
     return (string)$value;
   }
 
-  public function getColumnType(string $type): string
-  {
-    return Utils::getPostgresType($type);
-  }
-
-  public function synchronizeSchema(Schema $schema): array
-  {
-    return $this->synchronizer->synchronizeSchema($schema);
-  }
-
-  public function synchronizeDatabase(Database $database): array
-  {
-    return $this->synchronizer->synchronizeDatabase($database);
-  }
 
   public function executeQuery(PDO $pdo, Sql|string $sql)
   {

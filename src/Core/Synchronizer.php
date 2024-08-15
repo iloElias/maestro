@@ -2,163 +2,149 @@
 
 namespace Ilias\Maestro\Core;
 
-use Ilias\Maestro\Abstract\Database;
-use Ilias\Maestro\Abstract\Schema;
-use Ilias\Maestro\Helpers\SchemaComparator;
 use PDO;
+use Ilias\Maestro\Abstract\Database;
+use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Utils\Utils;
 
 class Synchronizer
 {
-  private SchemaComparator $schemaComparator;
+  private Manager $manager;
   private PDO $pdo;
-
-  public function __construct(PDO $pdo)
+  public function __construct()
   {
-    $this->schemaComparator = new SchemaComparator();
-    $this->pdo = $pdo;
+    $this->manager = new Manager();
+    $this->pdo = PDOConnection::getInstance();
   }
 
-  public function synchronizeDatabase(Database $database): array
+  public function synchronize(Database $ormDb): void
   {
-    $schemas = $database::getSchemas();
-    $sqlStatements = [];
+    $ormVector = $this->vectorizeORM($ormDb);
+    $dbVector = $this->vectorizeDatabase($this->pdo);
+    $differences = $this->compareVectors($ormVector, $dbVector);
+    $queries = $this->generateSQLQueries($differences);
 
-    foreach ($schemas as $schemaClass) {
-      $schema = new $schemaClass();
-      $schemaSqlStatements = $this->synchronizeSchema($schema);
-      $sqlStatements = array_merge($sqlStatements, $schemaSqlStatements);
-    }
+    echo var_dump($ormVector, $dbVector, $differences, $queries);
+    return;
 
-    return $sqlStatements;
+    // $this->executeQueries($queries, $this->pdo);
   }
 
-  public function synchronizeSchema(Schema $schema): array
+  private function vectorizeORM(Database $ormDb): array
   {
-    $schemaName = $schema::getSanitizedName();
-    $this->createSchemaIfNotExists($schemaName);
+    $vector = [];
 
-    $dbSchema = $this->getDatabaseSchema($schemaName);
-    $definedSchema = $this->schemaComparator->getDefinedSchema($schema);
+    foreach (get_object_vars($ormDb) as $schemaName => $schema) {
+      $schemaVector = [];
 
-    // echo "DB Schema:\n";
-    // print_r($dbSchema);
-    // echo "Defined Schema:\n";
-    // print_r($definedSchema);
+      foreach (get_object_vars($schema) as $tableName => $table) {
+        $tableVector = [
+          'columns' => $table::getColumns(),
+          'unique' => $table::getUniqueColumns(),
+        ];
 
-    $differences = $this->schemaComparator->compareSchemas($dbSchema, $definedSchema);
-
-    // echo "Differences:\n";
-    // print_r($differences);
-
-    $sqlStatements = $this->generateSqlStatements($differences, $schema);
-    $this->applySqlStatements($sqlStatements);
-
-    return $sqlStatements;
-  }
-
-  private function createSchemaIfNotExists(string $schemaName)
-  {
-    $sql = "CREATE SCHEMA IF NOT EXISTS \"$schemaName\";";
-    $this->pdo->exec($sql);
-  }
-
-  private function generateSqlStatements(array $differences, Schema $schema): array
-  {
-    $sqlStatements = [];
-    $schemaName = $schema::getSanitizedName();
-    $tables = $schema::getTables();
-
-    if (isset($differences['create'])) {
-      foreach ($differences['create'] as $tableName) {
-        if (isset($tables[$tableName])) {
-          $sqlStatements[] = $this->createTable($tables[$tableName]);
-        }
+        $schemaVector[$tableName] = $tableVector;
       }
+
+      $vector[$schemaName] = $schemaVector;
     }
 
-    if (isset($differences['add'])) {
-      foreach ($differences['add'] as $tableName => $columns) {
-        foreach ($columns as $column) {
-          $columnType = $column['data_type'];
-          $sqlStatements[] = "ALTER TABLE \"$schemaName\".\"$tableName\" ADD COLUMN \"{$column['column_name']}\" $columnType;";
-        }
-      }
-    }
-
-    if (isset($differences['remove'])) {
-      foreach ($differences['remove'] as $tableName => $columns) {
-        foreach ($columns as $column) {
-          $sqlStatements[] = "ALTER TABLE \"$schemaName\".\"$tableName\" DROP COLUMN \"$column\";";
-        }
-      }
-    }
-
-    if (isset($differences['drop'])) {
-      foreach ($differences['drop'] as $tableName) {
-        $sqlStatements[] = "DROP TABLE \"$schemaName\".\"$tableName\";";
-      }
-    }
-
-    // echo "Generated SQL Statements:\n";
-    // print_r($sqlStatements);
-
-    return $sqlStatements;
+    return $vector;
   }
 
-  private function createTable(string $tableClass): string
+  private function vectorizeDatabase(PDO $pdo): array
   {
-    $tableName = $tableClass::getSanitizedName();
-    $schemaName = $this->getSchemaNameFromTable($tableClass);
-    $columns = $tableClass::getColumns();
-    $primaryKey = 'id';
-    $columnDefs = [];
+    $vector = [];
 
-    foreach ($columns as $name => $type) {
-      $columnDef = "\"$name\" " . $this->getColumnType($type);
-      if ($name === $primaryKey) {
-        $columnDef .= " PRIMARY KEY";
-      }
-      $columnDefs[] = $columnDef;
-    }
+    $query = "SELECT table_schema, table_name, column_name, data_type, column_default, is_nullable
+      FROM information_schema.columns
+      WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
+      ORDER BY table_schema, table_name, ordinal_position;";
+    $stmt = $pdo->query($query);
 
-    $columnsSql = implode(", ", $columnDefs);
-    return "CREATE TABLE \"$schemaName\".\"$tableName\" ($columnsSql);";
-  }
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+      $schemaName = $row['table_schema'];
+      $tableName = $row['table_name'];
+      $columnName = $row['column_name'];
 
-  private function getColumnType(string $type): string
-  {
-    return $this->schemaComparator->mapDataType($type);
-  }
-
-  private function getSchemaNameFromTable(string $tableClass): string
-  {
-    $reflectionClass = new \ReflectionClass($tableClass);
-    $schemaProperty = $reflectionClass->getProperty('schema');
-    $schemaClass = $schemaProperty->getType()->getName();
-    return (new \ReflectionClass($schemaClass))->getShortName();
-  }
-
-  private function applySqlStatements(array $sqlStatements)
-  {
-    foreach ($sqlStatements as $sql) {
-      $this->pdo->exec($sql);
-    }
-  }
-
-  private function getDatabaseSchema(string $schemaName): array
-  {
-    $query = $this->pdo->query("SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = '$schemaName'");
-    $dbSchema = [];
-
-    while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
-      $dbSchema[$row['table_name']][$row['column_name']] = [
-        'column_name' => $row['column_name'],
-        'data_type' => $row['data_type']
+      $vector[$schemaName][$tableName]['columns'][$columnName] = [
+        'type' => $row['data_type'],
+        'default' => $row['column_default'],
+        'not_null' => $row['is_nullable'] === 'NO',
       ];
     }
 
-    // print_r($dbSchema);
+    return $vector;
+  }
 
-    return $dbSchema;
+  private function compareVectors(array $ormVector, array $dbVector): array
+  {
+    $differences = [];
+
+    foreach ($ormVector as $schemaName => $schema) {
+      foreach ($schema as $tableName => $table) {
+        if (!isset($dbVector[$schemaName][$tableName])) {
+          $differences[] = [
+            'action' => 'create_table',
+            'table' => $tableName,
+          ];
+          continue;
+        }
+
+        $dbTable = $dbVector[$schemaName][$tableName];
+        foreach ($table['columns'] as $columnName => $column) {
+          if (!isset($dbTable['columns'][$columnName])) {
+            $differences[] = [
+              'action' => 'add_column',
+              'schema' => $schemaName,
+              'table' => $tableName,
+              'column' => $columnName,
+              'definition' => $column
+            ];
+          }
+        }
+      }
+    }
+
+    return $differences;
+  }
+
+  private function generateSQLQueries(array $differences): array
+  {
+    $queries = [];
+
+    foreach ($differences as $difference) {
+      switch ($difference['action']) {
+        case 'create_table':
+          $queries[] = $this->manager->createTable($difference['table']);
+          break;
+        case 'add_column':
+          $queries[] = $this->generateAddColumnSQL(
+            $difference['schema'],
+            $difference['table'],
+            $difference['column'],
+            $difference['definition']
+          );
+          break;
+      }
+    }
+
+    return $queries;
+  }
+
+  private function generateAddColumnSQL(string $schema, string $table, string $column, array $definition): string
+  {
+    $type = Utils::getPostgresType($definition['type']);
+    $notNull = $definition['not_null'] ? 'NOT NULL' : 'NULL';
+    $default = $definition['default'] ? "DEFAULT {$definition['default']}" : '';
+
+    return "ALTER TABLE \"$schema\".\"$table\" ADD COLUMN \"$column\" $type $notNull $default;";
+  }
+
+  private function executeQueries(array $queries, PDO $pdo): void
+  {
+    foreach ($queries as $query) {
+      $this->manager->executeQuery($pdo, $query);
+    }
   }
 }

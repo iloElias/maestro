@@ -2,8 +2,6 @@
 
 namespace Ilias\Maestro\Utils;
 
-use DateTime;
-
 class Utils
 {
   private const PHP_TO_POSTGRES_TYPE_MAP = [
@@ -17,7 +15,7 @@ class Utils
     "array" => "JSON",
     "object" => "JSON",
     "DateTime" => "TIMESTAMP",
-    "unknown type" => "text",
+    "unknown type" => "TEXT",
   ];
 
   public static function getPostgresType(string $phpType)

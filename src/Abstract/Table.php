@@ -30,17 +30,27 @@ abstract class Table extends Sanitizable
     foreach ($properties as $property) {
       if ($property->getName() !== 'schema') {
         $propertyType = $property->getType();
+        $defaultValue = $property->getDefaultValue();
+        $isNullable = $propertyType->allowsNull();
+        $columnType = null;
+
         if ($propertyType instanceof \ReflectionUnionType) {
           $types = $propertyType->getTypes();
           foreach ($types as $type) {
             if ($type->getName() !== PostgresFunction::class) {
-              $columns[$property->getName()] = $type->getName();
+              $columnType = $type->getName();
               break;
             }
           }
         } else {
-          $columns[$property->getName()] = $propertyType->getName();
+          $columnType = $propertyType->getName();
         }
+
+        $columns[$property->getName()] = [
+          'type' => $columnType,
+          'default' => $defaultValue,
+          'nullable' => $isNullable
+        ];
       }
     }
 
