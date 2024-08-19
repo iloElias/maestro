@@ -13,7 +13,7 @@ use Maestro\Example\User;
 $coreDatabase = new Manager();
 $maestroDb = new MaestroDb();
 
-print implode("\n", $coreDatabase->createDatabase($maestroDb)) . "\n";
+print implode("\n", $coreDatabase->createDatabase($maestroDb, true)) . "\n";
 
 // echo $coreDatabase->createTable(User::class) . "\n";
 // var_dump(User::getTableCreationInfo());

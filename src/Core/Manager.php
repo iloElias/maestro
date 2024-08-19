@@ -35,7 +35,7 @@ class Manager
     $this->pdo = PDOConnection::getInstance();
   }
 
-  public function createDatabase(Database $database): array
+  public function createDatabase(Database $database, bool $executeOnComplete = true): array
   {
     $sql = [];
     $schemas = $database::getSchemas();
@@ -47,6 +47,12 @@ class Manager
     foreach ($schemas as $schemaClass) {
       $schema = new $schemaClass();
       $sql = [...$sql, ...$this->createTablesForSchema($schema)];
+    }
+
+    if ($executeOnComplete) {
+      foreach ($sql as $query) {
+        $this->executeQuery($this->pdo, $query);
+      }
     }
 
     return $sql;
@@ -113,7 +119,7 @@ class Manager
       }
 
       $sanitizedColumnName = Utils::sanitizeForPostgres($name);
-      $columnType = is_array($type) ? Utils::getPostgresType($type[0]) : Utils::getPostgresType($type);
+      $columnType = is_array($type['type']) ? Utils::getPostgresType($type['type'][0]) : Utils::getPostgresType($type['type']);
 
       $columnDef = "$sanitizedColumnName $columnType";
 
@@ -125,7 +131,7 @@ class Manager
 
       $defaultValue = $this->getPropertyDefaultValue($reflectionClass, $name);
       if ($defaultValue !== null) {
-        if (is_array($type) && $type[1] === PostgresFunction::class) {
+        if (is_array($type['type']) && $type['type'][1] === PostgresFunction::class) {
           $columnDef .= " DEFAULT {$defaultValue}";
         } else {
           $columnDef .= " DEFAULT " . $this->formatDefaultValue($defaultValue);

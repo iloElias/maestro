@@ -37,10 +37,7 @@ abstract class Table extends Sanitizable
         if ($propertyType instanceof \ReflectionUnionType) {
           $types = $propertyType->getTypes();
           foreach ($types as $type) {
-            if ($type->getName() !== PostgresFunction::class) {
-              $columnType = $type->getName();
-              break;
-            }
+            $columnType[] = $type->getName();
           }
         } else {
           $columnType = $propertyType->getName();
