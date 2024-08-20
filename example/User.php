@@ -9,7 +9,9 @@ use Ilias\Maestro\Interface\PostgresFunction;
 final class User extends Table
 {
   public Hr $schema;
-  public string $nickname;
+  /** @unique */
+  public string $nickname;  
+  /** @unique */
   public string $email;
   public string $password;
   public bool $active = true;

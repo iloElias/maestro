@@ -34,19 +34,18 @@ class Synchronizer
   {
     $vector = [];
 
-    foreach (get_object_vars($ormDb) as $schemaName => $schema) {
-      $schemaVector = [];
-
-      foreach (get_object_vars($schema) as $tableName => $table) {
-        $tableVector = [
-          'columns' => $table::getColumns(),
-          'unique' => $table::getUniqueColumns(),
-        ];
-
-        $schemaVector[$tableName] = $tableVector;
+    foreach ($ormDb::getSchemas() as $schemaName => $schema) {
+      foreach ($schema::getTables() as $tableName => $table) {
+        $columns = $table::getColumns();
+        foreach ($columns as $columnName => $column) {
+          $vector[$schemaName][$tableName][$columnName] = [
+            'type' => $column['type'],
+            'default' => $column['default'],
+            'not_null' => $column['not_null'],
+            'is_unique' => $column['is_unique'],
+          ];
+        }
       }
-
-      $vector[$schemaName] = $schemaVector;
     }
 
     return $vector;
@@ -56,10 +55,19 @@ class Synchronizer
   {
     $vector = [];
 
-    $query = "SELECT table_schema, table_name, column_name, data_type, column_default, is_nullable
-      FROM information_schema.columns
-      WHERE table_schema NOT IN ('information_schema', 'pg_catalog')
-      ORDER BY table_schema, table_name, ordinal_position;";
+    $query = "SELECT c.table_schema, c.table_name, c.column_name, c.data_type, c.column_default, c.is_nullable, tc.constraint_type
+      FROM information_schema.columns c
+      LEFT JOIN information_schema.key_column_usage kcu
+      ON c.table_schema = kcu.table_schema
+      AND c.table_name = kcu.table_name
+      AND c.column_name = kcu.column_name
+      LEFT JOIN information_schema.table_constraints tc
+      ON kcu.constraint_name = tc.constraint_name
+      AND kcu.table_schema = tc.table_schema
+      AND kcu.table_name = tc.table_name
+      AND tc.constraint_type = 'UNIQUE'
+      WHERE c.table_schema NOT IN ('information_schema', 'pg_catalog')
+      ORDER BY c.table_schema, c.table_name, c.ordinal_position;";
     $stmt = $pdo->query($query);
 
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -67,10 +75,11 @@ class Synchronizer
       $tableName = $row['table_name'];
       $columnName = $row['column_name'];
 
-      $vector[$schemaName][$tableName]['columns'][$columnName] = [
+      $vector[$schemaName][$tableName][$columnName] = [
         'type' => $row['data_type'],
         'default' => $row['column_default'],
         'not_null' => $row['is_nullable'] === 'NO',
+        'is_unique' => $row['constraint_type'] === 'UNIQUE',
       ];
     }
 
@@ -92,8 +101,8 @@ class Synchronizer
         }
 
         $dbTable = $dbVector[$schemaName][$tableName];
-        foreach ($table['columns'] as $columnName => $column) {
-          if (!isset($dbTable['columns'][$columnName])) {
+        foreach ($table as $columnName => $column) {
+          if (!isset($dbTable[$columnName])) {
             $differences[] = [
               'action' => 'add_column',
               'schema' => $schemaName,
@@ -134,7 +143,7 @@ class Synchronizer
 
   private function generateAddColumnSQL(string $schema, string $table, string $column, array $definition): string
   {
-    $type = Utils::getPostgresType($definition['type']);
+    $type = Utils::getPostgresType(is_array($definition['type']) ? $definition['type'][0] : $definition['type']);
     $notNull = $definition['not_null'] ? 'NOT NULL' : 'NULL';
     $default = $definition['default'] ? "DEFAULT {$definition['default']}" : '';
 

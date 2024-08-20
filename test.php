@@ -10,15 +10,15 @@ use Maestro\Example\User;
 // var_dump(MaestroDb::dumpDatabase());
 // MaestroDb::prettyPrint();
 
-$coreDatabase = new Manager();
-$maestroDb = new MaestroDb();
+// $coreDatabase = new Manager();
+// $maestroDb = new MaestroDb();
 
-print implode("\n", $coreDatabase->createDatabase($maestroDb, true)) . "\n";
+// print implode("\n", $coreDatabase->createDatabase($maestroDb, true)) . "\n";
 
 // echo $coreDatabase->createTable(User::class) . "\n";
 // var_dump(User::getTableCreationInfo());
 
-// $ormDb = new MaestroDb();
+$ormDb = new MaestroDb();
 
-// $synchronizer = new Synchronizer();
-// $synchronizer->synchronize($ormDb);
+$synchronizer = new Synchronizer();
+$synchronizer->synchronize($ormDb);

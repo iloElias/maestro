@@ -33,6 +33,7 @@ abstract class Table extends Sanitizable
         $defaultValue = $property->getDefaultValue();
         $isNullable = $propertyType->allowsNull();
         $columnType = null;
+        $isUnique = false;
 
         if ($propertyType instanceof \ReflectionUnionType) {
           $types = $propertyType->getTypes();
@@ -43,10 +44,16 @@ abstract class Table extends Sanitizable
           $columnType = $propertyType->getName();
         }
 
+        $docComment = $property->getDocComment();
+        if ($docComment && strpos($docComment, '@unique') !== false) {
+          $isUnique = true;
+        }
+
         $columns[$property->getName()] = [
           'type' => $columnType,
           'default' => $defaultValue,
-          'nullable' => $isNullable
+          'not_null' => !$isNullable,
+          'is_unique' => $isUnique,
         ];
       }
     }
