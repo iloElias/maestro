@@ -26,7 +26,7 @@ class Manager
 {
   public static array $idCreationPattern = [
     'SERIAL',
-    'PRIMARY KEY'
+    'PRIMARY KEY',
   ];
   public static string $primaryKey = 'id';
   public PDO $pdo;
@@ -48,7 +48,7 @@ class Manager
       $schemasSql[] = $this->createSchema($schema);
       [$create, $constraints] = $this->createTablesForSchema($schema);
       $tablesSql = array_merge($tablesSql, $create);
-      $constraintsSql = array_merge($constraintsSql, $constraints);
+      $constraintsSql = array_merge($constraintsSql, ...$constraints);
     }
     $sql = array_merge($schemasSql, $tablesSql, $constraintsSql);
     if ($executeOnComplete) {
