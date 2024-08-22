@@ -6,6 +6,7 @@ use Ilias\Maestro\Interface\PostgresFunction;
 
 abstract class Table extends Sanitizable
 {
+  // TODO: abstract this to a new class so diverse types of ids can be created
   public int $id;
 
   public static function getTableName(): string

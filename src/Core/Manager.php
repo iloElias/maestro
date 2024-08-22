@@ -11,6 +11,7 @@ use Ilias\Maestro\Abstract\Database;
 use Ilias\Maestro\Database\PDOConnection;
 use Ilias\Maestro\Interface\PostgresFunction;
 use Ilias\Maestro\Exceptions\NotFinalExceptions;
+use stdClass;
 
 /**
  * Class Database
@@ -24,10 +25,10 @@ use Ilias\Maestro\Exceptions\NotFinalExceptions;
 class Manager
 {
   public static array $idCreationPattern = [
-    "SERIAL",
-    "PRIMARY KEY"
+    'SERIAL',
+    'PRIMARY KEY'
   ];
-
+  public static string $primaryKey = 'id';
   public PDO $pdo;
 
   public function __construct()
@@ -37,18 +38,19 @@ class Manager
 
   public function createDatabase(Database $database, bool $executeOnComplete = true): array
   {
-    $sql = [];
+    $schemasSql = [];
+    $tablesSql = [];
+    $constraintsSql = [];
     $schemas = $database::getSchemas();
-    foreach ($schemas as $schemaClass) {
-      $schema = new $schemaClass();
-      $sql[] = $this->createSchema($schema);
-    }
 
     foreach ($schemas as $schemaClass) {
       $schema = new $schemaClass();
-      $sql = [...$sql, ...$this->createTablesForSchema($schema)];
+      $schemasSql[] = $this->createSchema($schema);
+      [$create, $constraints] = $this->createTablesForSchema($schema);
+      $tablesSql = array_merge($tablesSql, $create);
+      $constraintsSql = array_merge($constraintsSql, $constraints);
     }
-
+    $sql = array_merge($schemasSql, $tablesSql, $constraintsSql);
     if ($executeOnComplete) {
       foreach ($sql as $query) {
         $this->executeQuery($this->pdo, $query);
@@ -58,7 +60,7 @@ class Manager
     return $sql;
   }
 
-  public function createSchema(Schema | string $schema): string
+  public function createSchema(Schema|string $schema): string
   {
     if (gettype($schema) === "string" && is_subclass_of($schema, Schema::class)) {
       if (!Utils::isFinalClass($schema)) {
@@ -79,17 +81,18 @@ class Manager
   public function createTablesForSchema(Schema $schema): array
   {
     $this->createSchema($schema);
-    $sql = [];
+    $create = [];
+    $constraints = [];
 
     $tables = $schema::getTables();
     foreach ($tables as $tableClass) {
-      $sql[] = $this->createTable($tableClass);
+      $create[] = $this->createTable($tableClass);
     }
     foreach ($tables as $tableClass) {
-      $sql = array_merge($sql, $this->createForeignKeyConstraints($tableClass));
+      $constraints[] = $this->createForeignKeyConstraints($tableClass);
     }
 
-    return $sql;
+    return [$create, $constraints];
   }
 
   public function createTable(string $table): string
@@ -104,13 +107,12 @@ class Manager
     $schemaName = $this->getSchemaNameFromTable($table);
 
     $columnDefs = [];
-    $primaryKey = 'id';
     $reflectionClass = new \ReflectionClass($table);
 
-    if (isset($columns[$primaryKey])) {
-      $idColumnDef = Utils::sanitizeForPostgres($primaryKey) . " " . implode(" ", self::$idCreationPattern);
+    if (isset($columns[self::$primaryKey])) {
+      $idColumnDef = Utils::sanitizeForPostgres(self::$primaryKey) . " " . implode(" ", self::$idCreationPattern);
       $columnDefs[] = $idColumnDef;
-      unset($columns[$primaryKey]);
+      unset($columns[self::$primaryKey]);
     }
 
     foreach ($columns as $name => $type) {
@@ -210,7 +212,7 @@ class Manager
     } elseif (is_bool($value)) {
       return $value ? 'TRUE' : 'FALSE';
     }
-    return (string)$value;
+    return (string) $value;
   }
 
 
