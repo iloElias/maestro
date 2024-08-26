@@ -2,11 +2,10 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Abstract\QueryBuilder;
 use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Interface\Sql;
 
-class Select extends QueryBuilder implements Sql
+class Select extends Sql
 {
   private string $from;
   private array $columns = [];

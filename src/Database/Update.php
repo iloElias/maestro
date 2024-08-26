@@ -2,10 +2,9 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Abstract\QueryBuilder;
 use Ilias\Maestro\Interface\Sql;
 
-class Update extends QueryBuilder implements Sql
+class Update extends Sql
 {
   private $table;
   private $set = [];
