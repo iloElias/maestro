@@ -1,6 +1,6 @@
 <?php
 
-namespace Ilias\Maestro\Interface;
+namespace Ilias\Maestro\Abstract;
 
 abstract class Sql
 {
