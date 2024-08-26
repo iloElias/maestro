@@ -2,6 +2,7 @@
 
 namespace Ilias\Maestro\Database;
 
+use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Interface\Sql;
 
 class Select implements Sql
@@ -19,7 +20,7 @@ class Select implements Sql
     return $this;
   }
 
-  public function from(string $table): Select
+  public function from(string|Table $table): Select
   {
     $this->from = $table;
     return $this;

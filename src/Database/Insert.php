@@ -2,10 +2,11 @@
 
 namespace Ilias\Maestro\Database;
 
+use Ilias\Maestro\Abstract\QueryBuilder;
 use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Interface\Sql;
 
-class Insert implements Sql
+class Insert extends QueryBuilder implements Sql
 {
   private $table = '';
   private $columns = [];

@@ -9,6 +9,11 @@ abstract class Table extends Sanitizable
   // TODO: abstract this to a new class so diverse types of ids can be created
   public int $id;
 
+  public function __tostring()
+  {
+    return static::getTableName();
+  }
+
   public static function getTableName(): string
   {
     return self::getSanitizedName();

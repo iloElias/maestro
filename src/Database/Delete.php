@@ -2,9 +2,10 @@
 
 namespace Ilias\Maestro\Database;
 
+use Ilias\Maestro\Abstract\QueryBuilder;
 use Ilias\Maestro\Interface\Sql;
 
-class Delete implements Sql
+class Delete extends QueryBuilder implements Sql
 {
   private $table;
   private $where = [];
