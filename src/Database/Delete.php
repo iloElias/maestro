@@ -2,7 +2,7 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Interface\Sql;
+use Ilias\Maestro\Abstract\Sql;
 
 class Delete extends Sql
 {

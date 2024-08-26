@@ -4,7 +4,7 @@ namespace Ilias\Maestro\Core;
 
 use PDO;
 use Ilias\Maestro\Utils\Utils;
-use Ilias\Maestro\Interface\Sql;
+use Ilias\Maestro\Abstract\Sql;
 use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Database;
