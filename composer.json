@@ -38,11 +38,10 @@
     "bin/maestro"
   ],
   "require": {
-    "php": ">=8.0.0",
-    "ilias/dotenv": "dev-master"
+    "ilias/dotenv": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^11.2"
   },
-  "minimum-stability": "dev"
+  "minimum-stability": "stable"
 }

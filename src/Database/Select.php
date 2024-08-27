@@ -3,9 +3,9 @@
 namespace Ilias\Maestro\Database;
 
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Interface\Sql;
+use Ilias\Maestro\Abstract\Sql;
 
-class Select implements Sql
+class Select extends Sql
 {
   private string $from;
   private array $columns = [];
