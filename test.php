@@ -26,12 +26,14 @@ use Maestro\Example\User;
 // $synchronizer = new Synchronizer();
 // $synchronizer->synchronize($ormDb);
 
+$user = new User('murilo', 'murilo7456@gmail.com', md5('abc123'), true, new DateTime());
+
 $select = new Select();
-$select->from('users')
+$select->from($user)
   ->select('id', 'name')
   ->where(['id' => 1])
   ->in(['id' => [1, 2, 3]])
   ->order('name', 'DESC');
 
-echo $select->getSql() . "\n";
+echo $select->bindParameters() . "\n";
 

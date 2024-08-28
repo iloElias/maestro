@@ -4,8 +4,9 @@ namespace Ilias\Maestro\Abstract;
 
 use Ilias\Maestro\Utils\Utils;
 
-abstract class Schema extends Sanitizable
+abstract class Schema extends \stdClass
 {
+  use Sanitizable;
   public static function getSchemaName(): string
   {
     return static::class;

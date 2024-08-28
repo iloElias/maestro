@@ -2,30 +2,28 @@
 
 namespace Ilias\Maestro\Abstract;
 
-use Ilias\Maestro\Interface\PostgresFunction;
-
-abstract class Table extends Sanitizable
+abstract class Table extends \stdClass
 {
-  // TODO: abstract this to a new class so diverse types of ids can be created
-  public int $id;
-
-  public function __tostring()
-  {
-    return static::getTableName();
-  }
+  use Sanitizable;
 
   public static function getTableName(): string
   {
     return self::getSanitizedName();
   }
 
+  public function __toString()
+  {
+    return $this->getTableSchemaAddress();
+  }
   public static function getTableSchemaAddress(): string
   {
     $reflection = new \ReflectionClass(static::class);
-    $tableSchema = $reflection->getProperty("schema");
+    $tableReflection = $reflection->getProperty("schema") ?? $reflection->getProperty("Schema");
+    $tableSchema = $tableReflection->getType()->getName()::getSanitizedName() ?? "public";
     $tableName = self::getSanitizedName();
     return "\"{$tableSchema}\".\"{$tableName}\"";
   }
+  
 
   public static function getColumns(): array
   {

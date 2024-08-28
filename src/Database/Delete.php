@@ -19,7 +19,7 @@ class Delete extends Sql
   public function where(array $conditions): Delete
   {
     foreach ($conditions as $column => $value) {
-      $paramName = ":where_$column";
+      $paramName = ":where_{$column}";
       $this->where[] = "{$column} = {$paramName}";
       $this->parameters[$paramName] = $value;
     }
@@ -44,7 +44,11 @@ class Delete extends Sql
   {
     $whereClause = implode(" AND ", $this->where);
 
-    return "DELETE FROM {$this->table}" . ($whereClause ? " WHERE $whereClause" : "");
+    $sql = "DELETE FROM {$this->table}";
+    if ($whereClause) {
+        $sql .= " WHERE $whereClause";
+    }
+    return $sql;
   }
 
   public function getParameters(): array

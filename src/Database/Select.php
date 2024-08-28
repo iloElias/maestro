@@ -20,15 +20,28 @@ class Select extends Sql
     return $this;
   }
 
-  public function from(string|Table $table): Select
+  public function from(string|array|Table $table): Select
   {
+    if (is_array($table)) {
+      foreach ($table as $schema => $tableName) {
+        $this->from = "\"{$schema}\".\"{$tableName}\"";
+        return $this;
+      }
+    }
     $this->from = $table;
     return $this;
   }
 
-  public function join(string $table, string $condition, string $type = 'INNER'): Select
+  public function join(string $table, string $condition, array $columns = [], string $type = Sql::INNER_JOIN): Select
   {
     $this->joins[] = strtoupper($type) . " JOIN " . $table . " ON " . $condition;
+    foreach ($columns as $alias => $column) {
+      if (is_string($alias)) {
+        $this->columns[] = "{$table}.{$column}";
+        continue;
+      }
+      $this->columns[] = "{$table}.{$column} AS {$alias}";
+    }
     return $this;
   }
 

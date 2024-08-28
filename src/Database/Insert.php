@@ -19,11 +19,11 @@ class Insert extends Sql
     } catch (\Throwable) {
       $this->table = $table;
     }
-    
+
     return $this;
   }
 
-  public function values(Table | array $data): Insert
+  public function values(Table|array $data): Insert
   {
     if (is_subclass_of($data, Table::class)) {
       $tableColumns = $data::getColumns();
@@ -51,7 +51,9 @@ class Insert extends Sql
     if (!empty($this->table) && !empty($this->columns) && !empty($this->values)) {
       $sql[] = "INSERT INTO " . $this->table;
       $sql[] = "(" . implode(", ", $this->columns) . ")";
-      $sql[] = "VALUES (" . implode(", ", $this->values) . ")";
+      $sql[] = "VALUES (" . implode(", ", array_map(function ($value) {
+        return is_string($this->parameters[$value]) ? "'$value'" : $value;
+      }, $this->values)) . ")";
     }
 
     return implode(" ", $sql);
