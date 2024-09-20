@@ -1,6 +1,7 @@
 <?php
 
 namespace Ilias\Maestro\Abstract;
+use Ilias\Maestro\Database\Select;
 
 abstract class Table extends Sanitizable
 {
@@ -31,7 +32,7 @@ abstract class Table extends Sanitizable
           $columns[$property->getName()] = $property->getType()->getName();
         } catch (\Throwable) {
           foreach ($property->getType()->getTypes() as $type) {
-            $columns[$property->getName()][] = (string)$type;
+            $columns[$property->getName()][] = (string) $type;
           }
         }
       }
@@ -56,5 +57,44 @@ abstract class Table extends Sanitizable
   public static function getUniqueColumns(): array
   {
     return [];
+  }
+
+  public static function generateAlias(array $existingAlias = []): string
+  {
+    $baseAlias = strtolower((new \ReflectionClass(static::class))->getShortName());
+    $alias = $baseAlias;
+    $counter = 1;
+
+    while (in_array($alias, $existingAlias)) {
+      $alias = $baseAlias . $counter;
+      $counter++;
+    }
+
+    return $alias;
+  }
+
+  public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100)
+  {
+    $select = new Select();
+    $select->from([static::generateAlias() => static::getTableSchemaAddress()]);
+    if (!empty($prediction)) {
+      if (is_array($prediction)) {
+        $select->where($prediction);
+      }
+      if (is_string($prediction)) {
+        $select->where([$prediction]);
+      }
+    }
+    if (!empty($orderBy)) {
+      if (is_array($orderBy)) {
+        foreach ($orderBy as $order) {
+          $select->order($order);
+        }
+      }
+      if (is_string($orderBy)) {
+        $select->order($orderBy);
+      }
+    }
+    $select->limit($limit);
   }
 }

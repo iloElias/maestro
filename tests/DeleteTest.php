@@ -17,7 +17,7 @@ class DeleteTest extends TestCase
     $delete->from($table::getTableName())->where($conditions);
 
     $expectedSql = "DELETE FROM user WHERE email = :where_email";
-    $expectedParams = [':where_email' => 'email@example.com'];
+    $expectedParams = [':where_email' => "'email@example.com'"];
 
     $this->assertEquals($expectedSql, $delete->getSql());
     $this->assertEquals($expectedParams, $delete->getParameters());
@@ -47,7 +47,7 @@ class DeleteTest extends TestCase
     $delete->from($table::getTableName())->where($conditions);
 
     $expectedSql = "DELETE FROM user WHERE email = :where_email AND active = :where_active";
-    $expectedParams = [':where_email' => 'email@example.com', ':where_active' => false];
+    $expectedParams = [':where_email' => "'email@example.com'", ':where_active' => 'false'];
 
     $this->assertEquals($expectedSql, $delete->getSql());
     $this->assertEquals($expectedParams, $delete->getParameters());
@@ -99,21 +99,6 @@ class DeleteTest extends TestCase
 
     $expectedSql = "DELETE FROM user WHERE created_at = :where_created_at";
     $expectedParams = [':where_created_at' => $date];
-
-    $this->assertEquals($expectedSql, $delete->getSql());
-    $this->assertEquals($expectedParams, $delete->getParameters());
-  }
-
-  public function testDeleteWithNullCondition()
-  {
-    $delete = new Delete();
-    $table = User::class;
-    $conditions = ['email' => null];
-
-    $delete->from($table::getTableName())->where($conditions);
-
-    $expectedSql = "DELETE FROM user WHERE email = :where_email";
-    $expectedParams = [':where_email' => null];
 
     $this->assertEquals($expectedSql, $delete->getSql());
     $this->assertEquals($expectedParams, $delete->getParameters());

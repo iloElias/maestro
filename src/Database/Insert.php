@@ -2,28 +2,22 @@
 
 namespace Ilias\Maestro\Database;
 
+use Ilias\Maestro\Abstract\Bindable;
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Interface\Sql;
 
-class Insert implements Sql
+class Insert extends Bindable
 {
   private $table = '';
   private $columns = [];
   private $values = [];
-  private $parameters = [];
 
   public function into(string $table): Insert
   {
-    try {
-      $this->table = call_user_func("{$table}::getTableSchemaAddress");
-    } catch (\Throwable) {
-      $this->table = $table;
-    }
-    
+    $this->table = $this->validateTableName($table);
     return $this;
   }
 
-  public function values(Table | array $data): Insert
+  public function values(Table|array $data): Insert
   {
     if (is_subclass_of($data, Table::class)) {
       $tableColumns = $data::getColumns();

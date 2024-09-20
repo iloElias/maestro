@@ -2,18 +2,17 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Interface\Sql;
+use Ilias\Maestro\Abstract\Bindable;
 
-class Update implements Sql
+class Update extends Bindable
 {
   private $table;
   private $set = [];
   private $where = [];
-  private $parameters = [];
 
   public function table(string $table): Update
   {
-    $this->table = $table;
+    $this->table = $this->validateTableName($table);
     return $this;
   }
 
@@ -25,12 +24,25 @@ class Update implements Sql
     return $this;
   }
 
+  /**
+   * Adds WHERE conditions to the SQL query.
+   * This method accepts an associative array of conditions where the key is the column name and the value is the condition value.
+   *
+   * @param array $conditions An associative array of conditions for the WHERE clause.
+   * @return $this Returns the current instance for method chaining.
+   */
   public function where(array $conditions): Update
   {
     foreach ($conditions as $column => $value) {
-      $paramName = ":where_$column";
+      $paramName = ":where_{$column}";
+      if (is_int($value)) {
+        $this->parameters[$paramName] = $value;
+      } elseif (is_bool($value)) {
+        $this->parameters[$paramName] = $value ? 'true' : 'false';
+      } else {
+        $this->parameters[$paramName] = "'$value'";
+      }
       $this->where[] = "{$column} = {$paramName}";
-      $this->parameters[$paramName] = $value;
     }
     return $this;
   }
@@ -51,10 +63,11 @@ class Update implements Sql
 
   public function getSql(): string
   {
-    $setClause = implode(", ", array_map(fn ($k, $v) => "$k = $v", array_keys($this->set), $this->set));
+    $setClause = implode(", ", array_map(fn($k, $v) => "$k = $v", array_keys($this->set), $this->set));
     $whereClause = implode(" AND ", $this->where);
 
-    return "UPDATE {$this->table} SET $setClause" . ($whereClause ? " WHERE $whereClause" : "");;
+    return "UPDATE {$this->table} SET $setClause" . ($whereClause ? " WHERE $whereClause" : "");
+    ;
   }
 
   public function getParameters(): array

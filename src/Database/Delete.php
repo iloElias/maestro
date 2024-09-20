@@ -2,13 +2,12 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Interface\Sql;
+use Ilias\Maestro\Abstract\Bindable;
 
-class Delete implements Sql
+class Delete extends Bindable
 {
-  private $table;
-  private $where = [];
-  private $parameters = [];
+  private string $table;
+  private array $where = [];
 
   public function from(string $table): Delete
   {
@@ -16,16 +15,37 @@ class Delete implements Sql
     return $this;
   }
 
+  /**
+   * Adds WHERE conditions to the SQL query.
+   * This method accepts an associative array of conditions where the key is the column name and the value is the condition value.
+   *
+   * @param array $conditions An associative array of conditions for the WHERE clause.
+   * @return $this Returns the current instance for method chaining.
+   */
   public function where(array $conditions): Delete
   {
     foreach ($conditions as $column => $value) {
-      $paramName = ":where_$column";
+      $paramName = ":where_{$column}";
+      if (is_int($value)) {
+        $this->parameters[$paramName] = $value;
+      } elseif (is_bool($value)) {
+        $this->parameters[$paramName] = $value ? 'true' : 'false';
+      } else {
+        $this->parameters[$paramName] = "'$value'";
+      }
       $this->where[] = "{$column} = {$paramName}";
-      $this->parameters[$paramName] = $value;
     }
     return $this;
   }
 
+  /**
+   * Adds an IN condition to the delete query.
+   *
+   * This method allows you to specify multiple conditions for the delete query using the SQL IN clause. Each condition is an associative array where the key is the column name and the value is an array of values to match against.
+   *
+   * @param array $conditions An associative array of conditions where the key is the column name and the value is an array of values.
+   * @return Delete Returns the current instance of the Delete class for method chaining.
+   */
   public function in(array $conditions): Delete
   {
     foreach ($conditions as $column => $value) {
@@ -44,7 +64,7 @@ class Delete implements Sql
   {
     $whereClause = implode(" AND ", $this->where);
 
-    return "DELETE FROM {$this->table}" . ($whereClause ? " WHERE $whereClause" : "");
+    return "DELETE FROM {$this->table}" . ($whereClause ? " WHERE {$whereClause}" : "");
   }
 
   public function getParameters(): array
