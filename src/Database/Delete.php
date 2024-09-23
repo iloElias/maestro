@@ -12,7 +12,7 @@ class Delete extends Query
 
   public function from(string $table): Delete
   {
-    $this->table = $table;
+    $this->table = $this->validateTableName($table);
     return $this;
   }
 
