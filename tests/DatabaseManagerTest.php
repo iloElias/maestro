@@ -2,15 +2,12 @@
 
 namespace Tests\Unit;
 
-use Maestro\Example\MarkfyDb;
-use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Core\Manager;
-use Ilias\Maestro\Database\Insert;
-use Ilias\Maestro\Database\Select;
-use Ilias\Maestro\Database\Update;
 use Maestro\Example\Hr;
+use Maestro\Example\MaestroDb;
 use Maestro\Example\TaggedUser;
 use Maestro\Example\User;
+use PHPUnit\Framework\TestCase;
 use PDO;
 
 class DatabaseManagerTest extends TestCase
@@ -26,7 +23,7 @@ class DatabaseManagerTest extends TestCase
 
   public function testCreateDatabase()
   {
-    $database = new MarkfyDb();
+    $database = new MaestroDb();
     $sql = $this->manager->createDatabase($database);
 
     $expectedSql = [
