@@ -68,8 +68,8 @@ class Select extends Query
   public function where(array $conditions): Select
   {
     foreach ($conditions as $column => $value) {
-      $column = Utils::sanitizeForPostgres($column);
-      $paramName = str_replace('.', '_', ":where_{$column}");
+      $columnWhere = Utils::sanitizeForPostgres($column);
+      $paramName = str_replace('.', '_', ":where_{$columnWhere}");
       if (is_int($value)) {
         $this->parameters[$paramName] = $value;
       } elseif (is_bool($value)) {
@@ -85,9 +85,9 @@ class Select extends Query
   public function in(array $conditions): Select
   {
     foreach ($conditions as $column => $value) {
-      $column = Utils::sanitizeForPostgres($column);
       $inParams = array_map(function ($v, $k) use ($column) {
-        $paramName = ":in_{$column}_{$k}";
+        $columnIn = Utils::sanitizeForPostgres($column);
+        $paramName = ":in_{$columnIn}_{$k}";
         $this->parameters[$paramName] = $v;
         return $paramName;
       }, $value, array_keys($value));

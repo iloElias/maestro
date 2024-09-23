@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use Ilias\Maestro\Core\Manager;
 use Maestro\Example\Hr;
-use Maestro\Example\MaestroDb;
 use Maestro\Example\TaggedUser;
 use Maestro\Example\User;
 use PHPUnit\Framework\TestCase;
@@ -23,7 +22,7 @@ class DatabaseManagerTest extends TestCase
 
   public function testCreateDatabase()
   {
-    $database = new MaestroDb();
+    $database = new \Maestro\Example\MaestroDb();
     $sql = $this->manager->createDatabase($database);
 
     $expectedSql = [
@@ -133,10 +132,10 @@ class DatabaseManagerTest extends TestCase
 
   public function testExecuteQuery()
   {
-    $sql = "SELECT * FROM users";
+    $sql = "SELECT * FROM users LIMIT 1";
     $this->pdo->method('exec')->willReturn(1);
     $stmt = $this->manager->executeQuery($this->pdo, $sql);
 
-    $this->assertTrue($stmt);
+    $this->assertIsArray($stmt);
   }
 }

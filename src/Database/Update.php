@@ -36,8 +36,8 @@ class Update extends Query
   public function where(array $conditions): Update
   {
     foreach ($conditions as $column => $value) {
-      $column = Utils::sanitizeForPostgres($column);
-      $paramName = ":where_{$column}";
+      $columnWhere = Utils::sanitizeForPostgres($column);
+      $paramName = ":where_{$columnWhere}";
       if (is_int($value)) {
         $this->parameters[$paramName] = $value;
       } elseif (is_bool($value)) {
@@ -53,9 +53,9 @@ class Update extends Query
   public function in(array $conditions): Update
   {
     foreach ($conditions as $column => $value) {
-      $column = Utils::sanitizeForPostgres($column);
       $inParams = array_map(function ($v, $k) use ($column) {
-        $paramName = ":in_{$column}_{$k}";
+        $columnIn = Utils::sanitizeForPostgres($column);
+        $paramName = ":in_{$columnIn}_{$k}";
         $this->parameters[$paramName] = $v;
         return $paramName;
       }, $value, array_keys($value));

@@ -163,7 +163,7 @@ namespace Maestro\Example;
 
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Interface\PostgresFunction;
+use Ilias\Maestro\Abstract\PostgresFunction;
 use Ilias\Maestro\Types\Timestamp;
 
 final class Hr extends Schema

@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Delete;
+use Ilias\Maestro\Database\SqlBehavior;
 use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\User;
 
@@ -11,7 +12,7 @@ class DeleteTest extends TestCase
 {
   public function testDelete()
   {
-    $delete = new Delete();
+    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $conditions = ['email' => 'email@example.com'];
 
@@ -26,7 +27,7 @@ class DeleteTest extends TestCase
 
   public function testDeleteWithInClause()
   {
-    $delete = new Delete();
+    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $conditions = ['id' => [1, 2, 3]];
 
@@ -41,7 +42,7 @@ class DeleteTest extends TestCase
 
   public function testDeleteWithMultipleConditions()
   {
-    $delete = new Delete();
+    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $conditions = ['email' => 'email@example.com', 'active' => false];
 
@@ -56,7 +57,7 @@ class DeleteTest extends TestCase
 
   public function testDeleteWithoutConditions()
   {
-    $delete = new Delete();
+    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
 
     $delete->from($table::getTableName());
@@ -70,7 +71,7 @@ class DeleteTest extends TestCase
 
   public function testMultipleInConditions()
   {
-    $delete = new Delete();
+    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $conditions = [
       'id' => [1, 2, 3],
@@ -81,8 +82,12 @@ class DeleteTest extends TestCase
 
     $expectedSql = "DELETE FROM user WHERE id IN(:in_id_0,:in_id_1,:in_id_2) AND group_id IN(:in_group_id_0,:in_group_id_1,:in_group_id_2)";
     $expectedParams = [
-      ':in_id_0' => 1, ':in_id_1' => 2, ':in_id_2' => 3,
-      ':in_group_id_0' => 10, ':in_group_id_1' => 20, ':in_group_id_2' => 30
+      ':in_id_0' => 1,
+      ':in_id_1' => 2,
+      ':in_id_2' => 3,
+      ':in_group_id_0' => 10,
+      ':in_group_id_1' => 20,
+      ':in_group_id_2' => 30
     ];
 
     $this->assertEquals($expectedSql, $delete->getSql());
@@ -91,7 +96,7 @@ class DeleteTest extends TestCase
 
   public function testDeleteWithTimestampCondition()
   {
-    $delete = new Delete();
+    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $date = new Timestamp();
     $conditions = ['created_at' => $date];
