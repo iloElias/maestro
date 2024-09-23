@@ -3,13 +3,10 @@
 namespace Ilias\Maestro\Core;
 
 use PDO;
-use Ilias\Maestro\Exceptions\NotFinalExceptions;
-use Ilias\Maestro\Interface\Sql;
+use Ilias\Maestro\Abstract\Query;
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Database\Insert;
-use Ilias\Maestro\Database\Select;
-use Ilias\Maestro\Database\Update;
+use Ilias\Maestro\Exceptions\NotFinalExceptions;
 use Ilias\Maestro\Interface\PostgresFunction;
 use Ilias\Maestro\Utils\Utils;
 
@@ -206,14 +203,16 @@ class Manager
     return Utils::getPostgresType($type);
   }
 
-  public function executeQuery(PDO $pdo, Sql|string $sql)
+  public function executeQuery(PDO $pdo, Query|string $sql): array
   {
     if (is_string($sql)) {
-      $stmt = $pdo->exec($sql);
+      $result = $pdo->exec($sql);
+      if (is_object($result)) {
+        return $result->fetchAll(PDO::FETCH_ASSOC);
+      }
+      return [];
     } else {
-      $stmt = $pdo->prepare($sql->getSql());
-      $stmt->execute($sql->getParameters());
+      return $sql->bindParameters($pdo)->execute();
     }
-    return $stmt !== false;
   }
 }

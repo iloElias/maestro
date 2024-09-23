@@ -2,11 +2,12 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Abstract\Bindable;
+use Ilias\Maestro\Abstract\Query;
 use Ilias\Maestro\Abstract\SqlBehavior;
 use Ilias\Maestro\Interface\Sql;
+use Ilias\Maestro\Utils\Utils;
 
-class Select extends Bindable
+class Select extends Query
 {
   private string $from;
   private array $columns = [];
@@ -67,6 +68,7 @@ class Select extends Bindable
   public function where(array $conditions): Select
   {
     foreach ($conditions as $column => $value) {
+      $column = Utils::sanitizeForPostgres($column);
       $paramName = str_replace('.', '_', ":where_{$column}");
       if (is_int($value)) {
         $this->parameters[$paramName] = $value;
@@ -83,6 +85,7 @@ class Select extends Bindable
   public function in(array $conditions): Select
   {
     foreach ($conditions as $column => $value) {
+      $column = Utils::sanitizeForPostgres($column);
       $inParams = array_map(function ($v, $k) use ($column) {
         $paramName = ":in_{$column}_{$k}";
         $this->parameters[$paramName] = $v;

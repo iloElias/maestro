@@ -2,6 +2,7 @@
 
 namespace Ilias\Maestro\Abstract;
 use Ilias\Maestro\Database\Select;
+use Ilias\Maestro\Utils\Utils;
 
 abstract class Table extends Sanitizable
 {
@@ -15,7 +16,8 @@ abstract class Table extends Sanitizable
   public static function getTableSchemaAddress(): string
   {
     $reflection = new \ReflectionClass(static::class);
-    $tableSchema = $reflection->getProperty("schema");
+    $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
+    $tableSchema = Utils::sanitizeForPostgres($schemaNamespace[array_key_last($schemaNamespace)]);
     $tableName = self::getSanitizedName();
     return "\"{$tableSchema}\".\"{$tableName}\"";
   }
@@ -56,7 +58,18 @@ abstract class Table extends Sanitizable
 
   public static function getUniqueColumns(): array
   {
-    return [];
+    $reflection = new \ReflectionClass(static::class);
+    $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+    $uniqueColumns = [];
+
+    foreach ($properties as $property) {
+      $docComment = $property->getDocComment();
+      if ($docComment && strpos($docComment, '@unique') !== false) {
+        $uniqueColumns[] = $property->getName();
+      }
+    }
+
+    return $uniqueColumns;
   }
 
   public static function generateAlias(array $existingAlias = []): string
@@ -73,7 +86,15 @@ abstract class Table extends Sanitizable
     return $alias;
   }
 
-  public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100)
+  /**
+   * Fetches all rows from the table based on the given prediction, order, and limit.
+   *
+   * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
+   * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
+   * @param int|string $limit The limit for the number of rows to fetch. Default is 100.
+   * @return array The fetched rows as an array.
+   */
+  public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100): array
   {
     $select = new Select();
     $select->from([static::generateAlias() => static::getTableSchemaAddress()]);
@@ -96,5 +117,18 @@ abstract class Table extends Sanitizable
       }
     }
     $select->limit($limit);
+    return $select->bindParameters()->execute();
+  }
+
+  /**
+   * Fetches a single row from the table based on the given prediction and order.
+   *
+   * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
+   * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
+   * @return mixed The fetched row or null if no row is found.
+   */
+  public static function fetchRow(string|array $prediction = null, string|array $orderBy = null)
+  {
+    return self::fetchAll($prediction, $orderBy, 1)[0] ?? null;
   }
 }

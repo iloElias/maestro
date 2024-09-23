@@ -4,15 +4,18 @@ namespace Ilias\Maestro\Abstract;
 
 use Ilias\Maestro\Database\PDOConnection;
 use Ilias\Maestro\Database\SqlBehavior;
-use InvalidArgumentException, PDO;
+use Ilias\Maestro\Utils\Utils;
+use InvalidArgumentException, PDO, Exception, PDOStatement;
 
-abstract class Bindable
+abstract class Query
 {
   public mixed $current = null;
   protected array $parameters = [];
+  private ?PDOStatement $stmt = null;
 
   public function __construct(
     private string $behavior = SqlBehavior::SQL_STRICT,
+    private ?PDO $pdo = null,
   ) {
   }
 
@@ -26,7 +29,7 @@ abstract class Bindable
         throw new InvalidArgumentException("Table alias cannot be a number.");
       }
       $name = $this->validateTableName($value);
-      return [$name, $key];
+      return [Utils::sanitizeForPostgres($name), Utils::sanitizeForPostgres($key)];
     }
     return [];
   }
@@ -54,36 +57,35 @@ abstract class Bindable
     }
   }
 
-  public function bindParameters()
+  public function bindParameters(?PDO $pdo = null): Query
   {
-    foreach ($this->parameters as $key => $value) {
-      if (is_null($value)) {
-        $this->parameters[$key] = PDO::PARAM_NULL;
-      } elseif (is_bool($value)) {
-        $this->parameters[$key] = PDO::PARAM_BOOL;
-      } elseif (is_int($value)) {
-        $this->parameters[$key] = PDO::PARAM_INT;
-      } elseif (is_string($value)) {
-        $this->parameters[$key] = PDO::PARAM_STR;
-      } else {
-        throw new InvalidArgumentException("Unsupported parameter type: " . gettype($value));
+    if (!empty($this->pdo) || !empty($pdo)) {
+      $stmt = $this->pdo->prepare($this->getSql());
+      foreach ($this->parameters as $key => $value) {
+        if (is_null($value)) {
+          $stmt->bindValue($key, $value, PDO::PARAM_NULL);
+        } elseif (is_bool($value)) {
+          $stmt->bindValue($key, $value, PDO::PARAM_BOOL);
+        } elseif (is_int($value)) {
+          $stmt->bindValue($key, $value, PDO::PARAM_INT);
+        } elseif (is_string($value) || $value instanceof \DateTime) {
+          $stmt->bindValue($key, (string) $value, PDO::PARAM_STR);
+        } else {
+          throw new InvalidArgumentException("Unsupported parameter type: " . gettype($value));
+        }
       }
+      $this->stmt = $stmt;
+      return $this;
     }
+    throw new Exception("No PDO connection provided.");
   }
 
-  public function execute(PDO $pdo = null): array
+  public function execute(): array
   {
-    if (empty($pdo)) {
-      $pdo = PDOConnection::getInstance();
-
+    if (!empty($this->stmt)) {
+      $this->stmt->execute();
+      return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    $stmt = $pdo->prepare($this->getSql());
-    foreach ($this->getParameters() as $key => $value) {
-      $stmt->bindValue($key, $value, $this->parameters[$key]);
-    }
-    if (!$stmt->execute()) {
-      throw new \RuntimeException("Failed to execute statement: " . implode(", ", $stmt->errorInfo()));
-    }
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    throw new Exception("No PDOStatement object found.");
   }
 }

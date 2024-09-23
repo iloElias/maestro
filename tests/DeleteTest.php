@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Delete;
+use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\User;
 
 class DeleteTest extends TestCase
@@ -88,17 +89,17 @@ class DeleteTest extends TestCase
     $this->assertEquals($expectedParams, $delete->getParameters());
   }
 
-  public function testDeleteWithDateTimeCondition()
+  public function testDeleteWithTimestampCondition()
   {
     $delete = new Delete();
     $table = User::class;
-    $date = new \DateTime();
+    $date = new Timestamp();
     $conditions = ['created_at' => $date];
 
     $delete->from($table::getTableName())->where($conditions);
 
     $expectedSql = "DELETE FROM user WHERE created_at = :where_created_at";
-    $expectedParams = [':where_created_at' => $date];
+    $expectedParams = [':where_created_at' => "'{$date}'"];
 
     $this->assertEquals($expectedSql, $delete->getSql());
     $this->assertEquals($expectedParams, $delete->getParameters());

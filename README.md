@@ -1,5 +1,4 @@
 ## Maestro Documentation
-
 [![Maintainer](http://img.shields.io/badge/maintainer-@iloElias-blue.svg)](https://github.com/iloElias)
 [![Maintainer](http://img.shields.io/badge/maintainer-@dhenriquearantes-blue.svg)](https://github.com/dhenriquearantes)
 [![Package](https://img.shields.io/badge/package-iloelias/maestro-orange.svg)](https://packagist.org/packages/ilias/maestro)
@@ -22,6 +21,11 @@ Maestro is a PHP library designed to facilitate the creation and management of P
   - [Creating Schemas and Tables](#creating-schemas-and-tables)
   - [Foreign Key Constraints](#foreign-key-constraints)
   - [Executing Queries](#executing-queries)
+- [Query Builders](#query-builders)
+  - [Select](#select)
+  - [Insert](#insert)
+  - [Update](#update)
+  - [Delete](#delete)
 - [Examples](#examples)
   - [Defining a Schema and Tables](#defining-a-schema-and-tables)
   - [Generating SQL Queries](#generating-sql-queries)
@@ -51,6 +55,7 @@ A table class extends the `Table` abstract class. It can define columns as class
 #### Unique Columns
 
 You can specify columns that should be unique by overriding the `getUniqueColumns` method in your table class.
+You can also define a column as unique by adding the `@unique` clause to the documentation of the attribute you want to make unique. This format will not work if the `getUniqueColumns` method is overridden.
 
 #### Default Values
 
@@ -72,6 +77,81 @@ Foreign key constraints are added using `ALTER TABLE` statements after the table
 
 The `executeQuery` method executes the generated SQL queries using a PDO instance.
 
+### Query Builders
+
+Maestro provides query builder classes for common SQL operations: `Select`, `Insert`, `Update`, and `Delete`.
+
+#### Select
+
+The `Select` class allows you to build and execute SELECT queries.
+
+```php
+use Ilias\Maestro\Database\Select;
+use Ilias\Maestro\Database\PDOConnection;
+
+$select = new Select(PDOConnection::getInstance());
+$select->from(['u' => 'users'], ['u.id', 'u.name'])
+       ->where(['u.active' => true])
+       ->order('u.name', 'ASC')
+       ->limit(10);
+
+$sql = $select->getSql();
+$params = $select->getParameters();
+```
+
+#### Insert
+
+The `Insert` class allows you to build and execute INSERT queries.
+
+```php
+use Ilias\Maestro\Database\Insert;
+use Ilias\Maestro\Database\PDOConnection;
+use Maestro\Example\User;
+
+$user = new User('John Doe', 'john@example.com', md5('password'), true, new Timestamp('now'));
+
+$insert = new Insert(PDOConnection::getInstance());
+$insert->into(User::class)
+       ->values($user)
+       ->returning(['id']);
+
+$sql = $insert->getSql();
+$params = $insert->getParameters();
+```
+
+#### Update
+
+The `Update` class allows you to build and execute UPDATE queries.
+
+```php
+use Ilias\Maestro\Database\Update;
+use Ilias\Maestro\Database\PDOConnection;
+
+$update = new Update(PDOConnection::getInstance());
+$update->table('users')
+       ->set('name', 'Jane Doe')
+       ->where(['id' => 1]);
+
+$sql = $update->getSql();
+$params = $update->getParameters();
+```
+
+#### Delete
+
+The `Delete` class allows you to build and execute DELETE queries.
+
+```php
+use Ilias\Maestro\Database\Delete;
+use Ilias\Maestro\Database\PDOConnection;
+
+$delete = new Delete(PDOConnection::getInstance());
+$delete->from('users')
+       ->where(['id' => 1]);
+
+$sql = $delete->getSql();
+$params = $delete->getParameters();
+```
+
 ### Examples
 
 #### Defining a Schema and Tables
@@ -84,7 +164,7 @@ namespace Maestro\Example;
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Interface\PostgresFunction;
-use DateTime;
+use Ilias\Maestro\Types\Timestamp;
 
 final class Hr extends Schema
 {
@@ -97,13 +177,13 @@ final class User extends Table
   public string $username;
   public string $email;
   public string $password;
-  public DateTime | PostgresFunction | string $createdIn = "CURRENT_TIMESTAMP";
+  public Timestamp | PostgresFunction | string $createdIn = "CURRENT_TIMESTAMP";
 
   public function __construct(
     string $username,
     string $email,
     string $password,
-    DateTime $createdIn
+    Timestamp $createdIn
   ) {
     $this->username = $username;
     $this->email = $email;

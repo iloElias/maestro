@@ -2,37 +2,34 @@
 
 namespace Maestro\Example;
 
-use DateTime;
 use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Interface\PostgresFunction;
+use Ilias\Maestro\Types\Timestamp;
 
 final class User extends Table
 {
   public Hr $schema;
+  /** @unique */
   public string $nickname;
+  /** @unique */
   public string $email;
   public string $password;
   public bool $active = true;
-  public DateTime | PostgresFunction | string $createdIn = "CURRENT_TIMESTAMP";
-  public DateTime $updatedIn;
-  public DateTime $inactivatedIn;
+  public Timestamp|PostgresFunction|string $createdIn = PostgresFunction::CURRENT_TIMESTAMP;
+  public Timestamp $updatedIn;
+  public Timestamp $inactivatedIn;
 
   public function __construct(
     string $nickname,
     string $email,
     string $password,
     bool $active,
-    DateTime $createdIn
+    Timestamp $createdIn
   ) {
     $this->nickname = $nickname;
     $this->email = $email;
     $this->password = $password;
     $this->active = $active;
     $this->createdIn = $createdIn;
-  }
-
-  public static function getUniqueColumns(): array
-  {
-    return ["nickname", "email"];
   }
 }

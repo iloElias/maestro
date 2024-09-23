@@ -2,14 +2,16 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Abstract\Bindable;
+use Ilias\Maestro\Abstract\Query;
 use Ilias\Maestro\Abstract\Table;
+use Ilias\Maestro\Utils\Utils;
 
-class Insert extends Bindable
+class Insert extends Query
 {
   private $table = '';
   private $columns = [];
   private $values = [];
+  private $returning = [];
 
   public function into(string $table): Insert
   {
@@ -17,22 +19,35 @@ class Insert extends Bindable
     return $this;
   }
 
+  private function registerValue($column, $value)
+  {
+    $column = Utils::sanitizeForPostgres($column);
+    $this->columns[] = $column;
+    $paramName = ":$column";
+    $this->values[] = $paramName;
+    $this->parameters[$paramName] = $value;
+  }
+
   public function values(Table|array $data): Insert
   {
-    if (is_subclass_of($data, Table::class)) {
-      $tableColumns = $data::getColumns();
-      foreach ($tableColumns as $column => $type) {
-        $this->columns[] = $column;
-        $paramName = ":$column";
-        $this->values[] = $paramName;
-        $this->parameters[$paramName] = $data->$column;
+    if (is_object($data)) {
+      foreach ((array)$data as $column => $value) {
+        $this->registerValue($column, $value);
       }
-    } elseif (is_array($data)) {
+    }
+    if (is_array($data)) {
       foreach ($data as $column => $value) {
-        $this->columns[] = $column;
-        $paramName = ":$column";
-        $this->values[] = $paramName;
-        $this->parameters[$paramName] = $value;
+        $this->registerValue($column, $value);
+      }
+    }
+    return $this;
+  }
+
+  public function returning(array $columns): Insert
+  {
+    foreach ($columns as $column) {
+      if (!in_array($column, $this->returning)) {
+        $this->returning[] = $column;
       }
     }
     return $this;
@@ -46,6 +61,10 @@ class Insert extends Bindable
       $sql[] = "INSERT INTO " . $this->table;
       $sql[] = "(" . implode(", ", $this->columns) . ")";
       $sql[] = "VALUES (" . implode(", ", $this->values) . ")";
+    }
+
+    if (!empty($this->returning)) {
+      $sql[] = "RETURNING " . implode(", ", $this->returning);
     }
 
     return implode(" ", $sql);

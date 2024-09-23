@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Insert;
 use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\User;
 
 class InsertTest extends TestCase
@@ -70,11 +71,11 @@ class InsertTest extends TestCase
     $this->assertEquals($expectedParams, $insert->getParameters());
   }
 
-  public function testInsertWithDateTime()
+  public function testInsertWithTimestamp()
   {
     $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
-    $date = new \DateTime();
+    $date = new Timestamp();
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com', 'created_at' => $date];
 
     $insert->into($table::getTableName())->values($data);

@@ -2,16 +2,17 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Abstract\Bindable;
+use Ilias\Maestro\Abstract\Query;
+use Ilias\Maestro\Utils\Utils;
 
-class Delete extends Bindable
+class Delete extends Query
 {
   private string $table;
   private array $where = [];
 
   public function from(string $table): Delete
   {
-    $this->table = $table;
+    $this->table = $this->validateTableName($table);
     return $this;
   }
 
@@ -25,6 +26,7 @@ class Delete extends Bindable
   public function where(array $conditions): Delete
   {
     foreach ($conditions as $column => $value) {
+      $column = Utils::sanitizeForPostgres($column);
       $paramName = ":where_{$column}";
       if (is_int($value)) {
         $this->parameters[$paramName] = $value;
@@ -49,6 +51,7 @@ class Delete extends Bindable
   public function in(array $conditions): Delete
   {
     foreach ($conditions as $column => $value) {
+      $column = Utils::sanitizeForPostgres($column);
       $inParams = array_map(function ($v, $k) use ($column) {
         $paramName = ":in_{$column}_{$k}";
         $this->parameters[$paramName] = $v;

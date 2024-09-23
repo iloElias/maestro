@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use Ilias\Maestro\Database\SqlBehavior;
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Update;
+use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\User;
 
 class UpdateTest extends TestCase
@@ -95,11 +96,11 @@ class UpdateTest extends TestCase
     $this->assertEquals($expectedParams, $update->getParameters());
   }
 
-  public function testUpdateWithDateTime()
+  public function testUpdateWithTimestamp()
   {
     $update = new Update(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
-    $date = new \DateTime();
+    $date = new Timestamp();
     $data = ['updated_at' => $date];
     $conditions = ['email' => 'email@example.com'];
 

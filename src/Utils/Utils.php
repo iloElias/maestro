@@ -2,7 +2,8 @@
 
 namespace Ilias\Maestro\Utils;
 
-use DateTime;
+use Timestamp;
+use Ilias\Maestro\Types\Timestamp as TypesTimestamp;
 
 class Utils
 {
@@ -16,7 +17,7 @@ class Utils
     "boolean" => "BOOLEAN",
     "array" => "JSON",
     "object" => "JSON",
-    "DateTime" => "TIMESTAMP",
+    TypesTimestamp::class => "TIMESTAMP",
     "unknown type" => "text",
   ];
 
