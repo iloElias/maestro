@@ -211,11 +211,12 @@ Explanations:
 
 Your file should typically include the following variables:
 
-1. **DB_HOST**: The hostname of your database server.
-2. **DB_PORT**: The port number on which your database server is running.
-3. **DB_DATABASE**: The name of the database you want to connect to.
-4. **DB_USERNAME**: The username used to connect to the database.
-5. **DB_PASSWORD**: The password used to connect to the database.
+1. **DB_SQL**: The PHP data source driver name.
+2. **DB_HOST**: The hostname of your database server.
+3. **DB_PORT**: The port number on which your database server is running.
+4. **DB_NAME**: The name of the database you want to connect to.
+5. **DB_USER**: The username used to connect to the database.
+6. **DB_PASS**: The password used to connect to the database.
 
 Here is an example of what your .env file might look like:
 
