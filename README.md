@@ -197,15 +197,38 @@ final class User extends Table
   }
 }
 ```
+
 Explanations:
+
 - `final`: Use the final directive declaring your `Table`, `Schema` and `Database` classes. This is the application's way of keeping track of the created entities.
 - `type`: Declare all types of class attributes so that the application can better choose the equivalent data type from the database column.
 - `__construct`: The construct method is used to define the non-nullability of a database column. Add to the constructor arguments the columns that must not be null.
 - `default`: To declare the default value, simply add an initial value to the class attribute.
 - `custom function`: To use a postgres function as the default value, follow the previous step and add the following two typings: `<current type> | PostgresFunction | string` to the attribute type, then the text added as a value will be used as a function.
-- `unique`: To identify unique columns, override the static function `getUniqueColumns` and return the names of the columns that should be unique.
+- `unique`: Override the static `getUniqueColumns` method to return the names of unique columns. Alternatively, use the `@unique` clause in the attribute's documentation, but note this won't work if `getUniqueColumns` is overridden.
 
 #### Generating SQL Queries
+
+Your file should typically include the following variables:
+
+1. **DB_HOST**: The hostname of your database server.
+2. **DB_PORT**: The port number on which your database server is running.
+3. **DB_DATABASE**: The name of the database you want to connect to.
+4. **DB_USERNAME**: The username used to connect to the database.
+5. **DB_PASSWORD**: The password used to connect to the database.
+
+Here is an example of what your .env file might look like:
+
+```plaintext
+DB_SQL=pgsql
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=maestrodb
+DB_USER=postgres
+DB_PASS=dbpass
+```
+
+These variables are typically accessed in your PHP code using a library like `vlucas/phpdotenv` to load the environment variables. Here’s an example of how you might use these variables in your PHP code:
 
 ```php
 <?php
@@ -213,12 +236,12 @@ Explanations:
 require_once 'vendor/autoload.php';
 
 use Ilias\Maestro\Database\DatabaseManager;
+use Ilias\Maestro\Database\PDOConnection;
 use Maestro\Example\Hr;
-use Maestro\Example\User;
 use PDO;
 
-// Initialize PDO
-$pdo = new PDO('pgsql:host=localhost;dbname=testdb', 'username', 'password');
+// Initialize PDO with environment variables
+$pdo = PDOConnection::getInstance();
 
 // Initialize DatabaseManager
 $dbManager = new DatabaseManager($pdo);
