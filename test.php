@@ -6,6 +6,7 @@ use Ilias\Maestro\Core\Manager;
 use Ilias\Maestro\Database\Delete;
 use Ilias\Maestro\Database\Insert;
 use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Database\SqlBehavior;
 use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\MaestroDb;
@@ -14,7 +15,7 @@ use Maestro\Example\User;
 // var_dump(MaestroDb::dumpDatabase());
 // MaestroDb::prettyPrint();
 
-$coreDatabase = new Manager();
+// $coreDatabase = new Manager();
 // $maestroDb = new MaestroDb();
 
 // print implode("\n", $coreDatabase->createDatabase($maestroDb)) . "\n";

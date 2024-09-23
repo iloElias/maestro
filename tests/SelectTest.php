@@ -111,7 +111,7 @@ class SelectTest extends TestCase
       ->join(['profile' => 'profile'], 'user.id = profile.user_id', ['bio'])
       ->where($conditions);
 
-    $expectedSql = "SELECT user.nickname, user.email, profile.bio FROM user INNER JOIN profile AS profile ON user.id = profile.user_id WHERE user.active = :where_user_active";
+    $expectedSql = "SELECT user.nickname, user.email, profile.bio FROM user AS user INNER JOIN profile AS profile ON user.id = profile.user_id WHERE user.active = :where_user_active";
     $expectedParams = [':where_user_active' => 'true'];
 
     $this->assertEquals($expectedSql, $select->getSql());
@@ -129,7 +129,7 @@ class SelectTest extends TestCase
       ->join(['profile' => 'profile'], 'user.id = profile.user_id', ['bio'], 'LEFT')
       ->where($conditions);
 
-    $expectedSql = "SELECT user.nickname, user.email, profile.bio FROM user LEFT JOIN profile AS profile ON user.id = profile.user_id WHERE user.active = :where_user_active";
+    $expectedSql = "SELECT user.nickname, user.email, profile.bio FROM user AS user LEFT JOIN profile AS profile ON user.id = profile.user_id WHERE user.active = :where_user_active";
     $expectedParams = [':where_user_active' => true];
 
     $this->assertEquals($expectedSql, $select->getSql());
@@ -148,7 +148,7 @@ class SelectTest extends TestCase
       ->join(['account' => 'account'], 'user.id = account.user_id', ['balance'])
       ->where($conditions);
 
-    $expectedSql = "SELECT user.nickname, user.email, profile.bio, account.balance FROM user INNER JOIN profile AS profile ON user.id = profile.user_id INNER JOIN account AS account ON user.id = account.user_id WHERE user.active = :where_user_active";
+    $expectedSql = "SELECT user.nickname, user.email, profile.bio, account.balance FROM user AS user INNER JOIN profile AS profile ON user.id = profile.user_id INNER JOIN account AS account ON user.id = account.user_id WHERE user.active = :where_user_active";
     $expectedParams = [':where_user_active' => true];
 
     $this->assertEquals($expectedSql, $select->getSql());

@@ -73,9 +73,4 @@ class Update extends Query
     return "UPDATE {$this->table} SET $setClause" . ($whereClause ? " WHERE $whereClause" : "");
     ;
   }
-
-  public function getParameters(): array
-  {
-    return $this->parameters;
-  }
 }

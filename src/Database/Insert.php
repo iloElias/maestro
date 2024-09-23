@@ -69,9 +69,4 @@ class Insert extends Query
 
     return implode(" ", $sql);
   }
-
-  public function getParameters(): array
-  {
-    return $this->parameters;
-  }
 }

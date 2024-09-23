@@ -69,9 +69,4 @@ class Delete extends Query
 
     return "DELETE FROM {$this->table}" . ($whereClause ? " WHERE {$whereClause}" : "");
   }
-
-  public function getParameters(): array
-  {
-    return $this->parameters;
-  }
 }

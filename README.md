@@ -218,7 +218,7 @@ Your file should typically include the following variables:
 5. **DB_USER**: The username used to connect to the database.
 6. **DB_PASS**: The password used to connect to the database.
 
-Here is an example of what your .env file might look like:
+Here is what your .env file need to have:
 
 ```plaintext
 DB_SQL=pgsql
@@ -228,8 +228,6 @@ DB_NAME=maestrodb
 DB_USER=postgres
 DB_PASS=dbpass
 ```
-
-These variables are typically accessed in your PHP code using a library like `vlucas/phpdotenv` to load the environment variables. Here’s an example of how you might use these variables in your PHP code:
 
 ```php
 <?php
