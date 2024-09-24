@@ -4,13 +4,15 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Insert;
+use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\User;
 
 class InsertTest extends TestCase
 {
   public function testInsert()
   {
-    $insert = new Insert();
+    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com', 'password' => 'password'];
 
@@ -25,7 +27,7 @@ class InsertTest extends TestCase
 
   public function testInsertWithMissingFields()
   {
-    $insert = new Insert();
+    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com'];
 
@@ -40,40 +42,40 @@ class InsertTest extends TestCase
 
   public function testInsertWithAllFields()
   {
-    $insert = new Insert();
+    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $data = [
       'nickname' => 'nickname',
       'email' => 'email@example.com',
       'password' => 'password',
       'active' => true,
-      'createdIn' => 'CURRENT_TIMESTAMP',
-      'updatedIn' => '2022-01-01 00:00:00',
-      'inactivatedIn' => null
+      'created_in' => 'CURRENT_TIMESTAMP',
+      'updated_in' => '2022-01-01 00:00:00',
+      'inactivated_in' => null
     ];
 
     $insert->into($table::getTableName())->values($data);
 
-    $expectedSql = "INSERT INTO user (nickname, email, password, active, createdIn, updatedIn, inactivatedIn) VALUES (:nickname, :email, :password, :active, :createdIn, :updatedIn, :inactivatedIn)";
+    $expectedSql = "INSERT INTO user (nickname, email, password, active, created_in, updated_in, inactivated_in) VALUES (:nickname, :email, :password, :active, :created_in, :updated_in, :inactivated_in)";
     $expectedParams = [
       ':nickname' => 'nickname',
       ':email' => 'email@example.com',
       ':password' => 'password',
       ':active' => true,
-      ':createdIn' => 'CURRENT_TIMESTAMP',
-      ':updatedIn' => '2022-01-01 00:00:00',
-      ':inactivatedIn' => null
+      ':created_in' => 'CURRENT_TIMESTAMP',
+      ':updated_in' => '2022-01-01 00:00:00',
+      ':inactivated_in' => null
     ];
 
     $this->assertEquals($expectedSql, $insert->getSql());
     $this->assertEquals($expectedParams, $insert->getParameters());
   }
 
-  public function testInsertWithDateTime()
+  public function testInsertWithTimestamp()
   {
-    $insert = new Insert();
+    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
-    $date = new \DateTime();
+    $date = new Timestamp();
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com', 'created_at' => $date];
 
     $insert->into($table::getTableName())->values($data);
@@ -87,7 +89,7 @@ class InsertTest extends TestCase
 
   public function testInsertWithNullValue()
   {
-    $insert = new Insert();
+    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => null, 'password' => 'password'];
 

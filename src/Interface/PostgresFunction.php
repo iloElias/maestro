@@ -2,4 +2,7 @@
 
 namespace Ilias\Maestro\Interface;
 
-interface PostgresFunction {}
+abstract class PostgresFunction 
+{
+  const CURRENT_TIMESTAMP = 'CURRENT_TIMESTAMP';
+}

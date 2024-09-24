@@ -2,56 +2,92 @@
 
 namespace Ilias\Maestro\Database;
 
-use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Abstract\Sql;
+use Ilias\Maestro\Abstract\Query;
+use Ilias\Maestro\Utils\Utils;
 
-class Select extends Sql
+class Select extends Query
 {
+  const STAR = '*';
+  const INNER = 'INNER';
+  const LEFT = 'LEFT';
+  const RIGHT = 'RIGHT';
+  const ORDER_ASC = 'ASC';
+  const ORDER_DESC = 'DESC';
+
   private string $from;
+  private string $alias;
   private array $columns = [];
   private array $joins = [];
   private array $where = [];
+  private string $group = '';
+  private array $having = [];
   private array $order = [];
-  private array $parameters = [];
+  private string $offset = '';
+  private string $limit = '';
 
-  public function select(...$columns): Select
+  /**
+   * Sets the table and columns for the SELECT statement.
+   *
+   * @param array $table An array containing the table name and alias. It should be provided like `[$alias => $table]`, the `$table` being the schema name and the table name separated by a dot, basically like `"{$schema}.{$table}"`. The `$table` can also be provided as class name from a Table inherited class: `$table = User::class`.
+   * @param array $columns An array of columns to select, with optional renaming.
+   * @return Select Returns the current Select instance.
+   */
+  public function from(array $table, array $columns = [Select::STAR]): Select
   {
-    $this->columns = $columns;
-    return $this;
-  }
+    [$name, $alias] = $this->validateSelectTable($table);
+    $this->from = $name;
+    $this->alias = $alias;
 
-  public function from(string|array|Table $table): Select
-  {
-    if (is_array($table)) {
-      foreach ($table as $schema => $tableName) {
-        $this->from = "\"{$schema}\".\"{$tableName}\"";
-        return $this;
-      }
+    foreach ($columns as $rename => $column) {
+      $holder = is_string($column) ? "{$alias}.{$column}" : (string) $column;
+      $this->columns[] = is_int($rename) ? $holder : "{$holder} AS {$rename}";
     }
-    $this->from = $table;
+
     return $this;
   }
 
-  public function join(string $table, string $condition, array $columns = [], string $type = Sql::INNER_JOIN): Select
+  /**
+   * Adds a join clause to the select query.
+   *
+   * @param array $table An array containing the table name and alias. It should be provided like `[$alias => $table]`, the `$table` being the schema name and the table name separated by a dot, basically like `"{$schema}.{$table}"`. The `$table` can also be provided as class name from a Table inherited class: `$table = User::class`.
+   * @param string $condition The join condition.
+   * @param array $columns Optional. The columns to select from the joined table, specified as an array. Default is an empty array.
+   * @param string $type Optional. The type of join to perform (e.g., 'INNER', 'LEFT'). Default is 'INNER'.
+   * @return Select Returns the current Select instance for method chaining.
+   */
+  public function join(array $table, string $condition, array $columns = [], string $type = Select::INNER): Select
   {
-    $this->joins[] = strtoupper($type) . " JOIN " . $table . " ON " . $condition;
-    foreach ($columns as $alias => $column) {
-      if (is_string($alias)) {
-        $this->columns[] = "{$table}.{$column}";
-        continue;
-      }
-      $this->columns[] = "{$table}.{$column} AS {$alias}";
+    [$name, $alias] = $this->validateSelectTable($table);
+    $this->joins[] = strtoupper($type) . " JOIN {$name} AS {$alias} ON {$condition}";
+
+    foreach ($columns as $rename => $column) {
+      $holder = is_string($column) ? "{$alias}.{$column}" : (string) $column;
+      $this->columns[] = is_int($rename) ? $holder : "{$holder} AS {$rename}";
     }
+
     return $this;
   }
 
-  public function where(array $conditions)
+  /**
+   * Adds WHERE conditions to the SQL query.
+   * This method accepts an associative array of conditions where the key is the column name and the value is the condition value.
+   *
+   * @param array $conditions An associative array of conditions for the WHERE clause.
+   * @return $this Returns the current instance for method chaining.
+   */
+  public function where(array $conditions): Select
   {
     foreach ($conditions as $column => $value) {
-      $sanitizedColumn = str_replace('.', '_', $column);
-      $paramName = ":where_$sanitizedColumn";
+      $columnWhere = Utils::sanitizeForPostgres($column);
+      $paramName = str_replace('.', '_', ":where_{$columnWhere}");
+      if (is_int($value)) {
+        $this->parameters[$paramName] = $value;
+      } elseif (is_bool($value)) {
+        $this->parameters[$paramName] = $value ? 'true' : 'false';
+      } else {
+        $this->parameters[$paramName] = "'{$value}'";
+      }
       $this->where[] = "{$column} = {$paramName}";
-      $this->parameters[$paramName] = $value;
     }
     return $this;
   }
@@ -60,8 +96,15 @@ class Select extends Sql
   {
     foreach ($conditions as $column => $value) {
       $inParams = array_map(function ($v, $k) use ($column) {
-        $paramName = ":in_{$column}_{$k}";
-        $this->parameters[$paramName] = $v;
+        $columnIn = Utils::sanitizeForPostgres($column);
+        $paramName = ":in_{$columnIn}_{$k}";
+        if (is_int($v)) {
+          $this->parameters[$paramName] = $v;
+        } elseif (is_bool($v)) {
+          $this->parameters[$paramName] = $v ? 'true' : 'false';
+        } else {
+          $this->parameters[$paramName] = "'{$v}'";
+        }
         return $paramName;
       }, $value, array_keys($value));
       $inList = implode(",", $inParams);
@@ -70,9 +113,44 @@ class Select extends Sql
     return $this;
   }
 
+  public function group(array $columns): Select
+  {
+    $this->group = implode(", ", $columns);
+    return $this;
+  }
+
+  public function having(array $conditions): Select
+  {
+    foreach ($conditions as $column => $value) {
+      $columnHaving = Utils::sanitizeForPostgres($column);
+      $paramName = ":having_{$columnHaving}";
+      if (is_int($value)) {
+        $this->parameters[$paramName] = $value;
+      } elseif (is_bool($value)) {
+        $this->parameters[$paramName] = $value ? 'true' : 'false';
+      } else {
+        $this->parameters[$paramName] = "'{$value}'";
+      }
+      $this->having[] = "{$column} = {$paramName}";
+    }
+    return $this;
+  }
+
   public function order(string $column, string $direction = 'ASC'): Select
   {
-    $this->order[] = "$column $direction";
+    $this->order[] = "{$column} {$direction}";
+    return $this;
+  }
+
+  public function offset(int|string $offset): Select
+  {
+    $this->offset = "{$offset}";
+    return $this;
+  }
+
+  public function limit(int|string $limit): Select
+  {
+    $this->limit = "{$limit}";
     return $this;
   }
 
@@ -81,24 +159,38 @@ class Select extends Sql
     $columns = implode(", ", $this->columns);
     $joins = implode(" ", $this->joins);
     $whereClause = implode(" AND ", $this->where);
+    $groupClause = $this->group;
+    $havingClause = implode(" AND ", $this->having);
     $orderClause = implode(", ", $this->order);
 
-    $sql = "SELECT $columns FROM {$this->from}";
-    if ($joins) {
-      $sql .= " " . $joins;
+    $sql = [];
+    if ($this->behavior === SqlBehavior::SQL_STRICT || !empty($joins)) {
+      $sql[] = "SELECT $columns FROM {$this->from} AS {$this->alias}";
+    } else {
+      $sql[] = "SELECT $columns FROM {$this->from}";
     }
-    if ($whereClause) {
-      $sql .= " WHERE " . $whereClause;
+    if (!empty($joins)) {
+      $sql[] = $joins;
     }
-    if ($orderClause) {
-      $sql .= " ORDER BY " . $orderClause;
+    if (!empty($whereClause)) {
+      $sql[] = "WHERE {$whereClause}";
+    }
+    if (!empty($groupClause)) {
+      $sql[] = "GROUP BY {$groupClause}";
+    }
+    if (!empty($havingClause)) {
+      $sql[] = "HAVING {$havingClause}";
+    }
+    if (!empty($orderClause)) {
+      $sql[] = "ORDER BY {$orderClause}";
+    }
+    if (!empty($this->limit)) {
+      $sql[] = "LIMIT {$this->limit}";
+    }
+    if (!empty($this->offset)) {
+      $sql[] = "OFFSET {$this->offset}";
     }
 
-    return $sql;
-  }
-
-  public function getParameters(): array
-  {
-    return $this->parameters;
+    return implode(" ", $sql);
   }
 }

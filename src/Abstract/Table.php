@@ -1,6 +1,8 @@
 <?php
 
 namespace Ilias\Maestro\Abstract;
+use Ilias\Maestro\Database\Select;
+use Ilias\Maestro\Utils\Utils;
 
 abstract class Table extends \stdClass
 {
@@ -15,15 +17,15 @@ abstract class Table extends \stdClass
   {
     return $this->getTableSchemaAddress();
   }
+
   public static function getTableSchemaAddress(): string
   {
     $reflection = new \ReflectionClass(static::class);
-    $tableReflection = $reflection->getProperty("schema") ?? $reflection->getProperty("Schema");
-    $tableSchema = $tableReflection->getType()->getName()::getSanitizedName() ?? "public";
+    $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
+    $tableSchema = Utils::sanitizeForPostgres($schemaNamespace[array_key_last($schemaNamespace)]);
     $tableName = self::getSanitizedName();
     return "\"{$tableSchema}\".\"{$tableName}\"";
   }
-  
 
   public static function getColumns(): array
   {
@@ -33,32 +35,13 @@ abstract class Table extends \stdClass
 
     foreach ($properties as $property) {
       if ($property->getName() !== 'schema') {
-        $propertyType = $property->getType();
-        $defaultValue = $property->getDefaultValue();
-        $isNullable = $propertyType->allowsNull();
-        $columnType = null;
-        $isUnique = false;
-
-        if ($propertyType instanceof \ReflectionUnionType) {
-          $types = $propertyType->getTypes();
-          foreach ($types as $type) {
-            $columnType[] = $type->getName();
+        try {
+          $columns[$property->getName()] = $property->getType()->getName();
+        } catch (\Throwable) {
+          foreach ($property->getType()->getTypes() as $type) {
+            $columns[$property->getName()][] = (string) $type;
           }
-        } else {
-          $columnType = $propertyType->getName();
         }
-
-        $docComment = $property->getDocComment();
-        if ($docComment && strpos($docComment, '@unique') !== false) {
-          $isUnique = true;
-        }
-
-        $columns[$property->getName()] = [
-          'type' => $columnType,
-          'default' => $defaultValue,
-          'not_null' => !$isNullable,
-          'is_unique' => $isUnique,
-        ];
       }
     }
 
@@ -95,6 +78,77 @@ abstract class Table extends \stdClass
 
   public static function getUniqueColumns(): array
   {
-    return [];
+    $reflection = new \ReflectionClass(static::class);
+    $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+    $uniqueColumns = [];
+
+    foreach ($properties as $property) {
+      $docComment = $property->getDocComment();
+      if ($docComment && strpos($docComment, '@unique') !== false) {
+        $uniqueColumns[] = $property->getName();
+      }
+    }
+
+    return $uniqueColumns;
+  }
+
+  public static function generateAlias(array $existingAlias = []): string
+  {
+    $baseAlias = strtolower((new \ReflectionClass(static::class))->getShortName());
+    $alias = $baseAlias;
+    $counter = 1;
+
+    while (in_array($alias, $existingAlias)) {
+      $alias = $baseAlias . $counter;
+      $counter++;
+    }
+
+    return $alias;
+  }
+
+  /**
+   * Fetches all rows from the table based on the given prediction, order, and limit.
+   *
+   * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
+   * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
+   * @param int|string $limit The limit for the number of rows to fetch. Default is 100.
+   * @return array The fetched rows as an array.
+   */
+  public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100): array
+  {
+    $select = new Select();
+    $select->from([static::generateAlias() => static::getTableSchemaAddress()]);
+    if (!empty($prediction)) {
+      if (is_array($prediction)) {
+        $select->where($prediction);
+      }
+      if (is_string($prediction)) {
+        $select->where([$prediction]);
+      }
+    }
+    if (!empty($orderBy)) {
+      if (is_array($orderBy)) {
+        foreach ($orderBy as $order) {
+          $select->order($order);
+        }
+      }
+      if (is_string($orderBy)) {
+        $select->order($orderBy);
+      }
+    }
+    $select->limit($limit);
+    return $select->bindParameters()->execute();
+  }
+
+  /**
+   * Fetches a single row from the table based on the given prediction and order.
+   *
+   * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
+   * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
+   * @return mixed The fetched row or null if no row is found.
+   */
+  public static function fetchRow(string|array $prediction = null, string|array $orderBy = null)
+  {
+    return self::fetchAll($prediction, $orderBy, 1)[0] ?? null;
   }
 }

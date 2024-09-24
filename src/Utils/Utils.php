@@ -2,6 +2,9 @@
 
 namespace Ilias\Maestro\Utils;
 
+use Timestamp;
+use Ilias\Maestro\Types\Timestamp as TypesTimestamp;
+
 class Utils
 {
   private const PHP_TO_POSTGRES_TYPE_MAP = [
@@ -14,8 +17,8 @@ class Utils
     "boolean" => "BOOLEAN",
     "array" => "JSON",
     "object" => "JSON",
-    "DateTime" => "TIMESTAMP",
-    "unknown type" => "TEXT",
+    TypesTimestamp::class => "TIMESTAMP",
+    "unknown type" => "text",
   ];
 
   public static function getPostgresType(string $phpType)
