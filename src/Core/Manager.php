@@ -2,14 +2,15 @@
 
 namespace Ilias\Maestro\Core;
 
+use Ilias\Maestro\Abstract\Database;
+use Ilias\Maestro\Utils\Utils;
 use PDO;
 use Ilias\Maestro\Abstract\Query;
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Exceptions\NotFinalExceptions;
+use Ilias\Maestro\Database\PDOConnection;
 use Ilias\Maestro\Interface\PostgresFunction;
 use Ilias\Maestro\Exceptions\NotFinalExceptions;
-use stdClass;
 
 /**
  * Class Database
