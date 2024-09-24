@@ -4,7 +4,7 @@ namespace Ilias\Maestro\Abstract;
 
 use Ilias\Maestro\Utils\Utils;
 
-abstract class Sanitizable
+trait Sanitizable
 {
   public static function getSanitizedName(): string
   {

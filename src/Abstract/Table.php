@@ -4,13 +4,18 @@ namespace Ilias\Maestro\Abstract;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 
-abstract class Table extends Sanitizable
+abstract class Table extends \stdClass
 {
-  public int $id;
+  use Sanitizable;
 
   public static function getTableName(): string
   {
     return self::getSanitizedName();
+  }
+
+  public function __toString()
+  {
+    return $this->getTableSchemaAddress();
   }
 
   public static function getTableSchemaAddress(): string
@@ -42,6 +47,21 @@ abstract class Table extends Sanitizable
 
     return $columns;
   }
+
+  public static function getTableCreationInfo(): array
+  {
+    return [
+      'tableName' => static::getSanitizedName(),
+      'columns' => static::getColumns()
+    ];
+  }
+
+  public static function getSanitizedName(): string
+  {
+    $reflect = new \ReflectionClass(static::class);
+    return strtolower($reflect->getShortName());
+  }
+
 
   public static function dumpTable(): array
   {

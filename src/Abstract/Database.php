@@ -2,8 +2,9 @@
 
 namespace Ilias\Maestro\Abstract;
 
-abstract class Database extends Sanitizable
+abstract class Database extends \stdClass
 {
+  use Sanitizable;
   public static function getDatabaseName(): string
   {
     return static::class;

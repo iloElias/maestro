@@ -252,3 +252,45 @@ foreach ($queries as $query) {
     $dbManager->executeQuery($pdo, $query);
 }
 ```
+
+Sure! Here are the explanations for the available commands that can be included in the `README.md`:
+
+### Commands
+
+Maestro provides several commands to help you manage and synchronize your database schema. Here are the available commands:
+
+#### `sync-schema`
+
+Synchronizes the schema for a specific schema class. This command ensures that the database schema for the specified class matches the schema defined in your PHP code.
+
+##### Usage
+
+```bash
+./vendor/bin/maestro sync-schema <SchemaClass>
+```
+
+##### Example
+
+```bash
+./vendor/bin/maestro sync-schema Maestro\\Example\\Hr
+```
+
+This command will synchronize the `Hr` schema, ensuring that the database tables and columns for the `Hr` schema match the definitions in your PHP code.
+
+#### `sync-database`
+
+Synchronizes the entire database schema for a specified database class. This command iterates through all the schemas defined in the database class and ensures that each schema in the database matches the schema defined in your PHP code.
+
+##### Usage
+
+```bash
+./vendor/bin/maestro sync-database <DatabaseClass>
+```
+
+##### Example
+
+```bash
+./vendor/bin/maestro sync-database Maestro\\Example\\MaestroDb
+```
+
+This command will synchronize all the schemas defined in the `MaestroDb` class, ensuring that the database tables and columns for each schema match the definitions in your PHP code.
