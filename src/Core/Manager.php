@@ -2,7 +2,9 @@
 
 namespace Ilias\Maestro\Core;
 
-use PDO ,InvalidArgumentException ,Throwable;
+use PDO;
+use InvalidArgumentException;
+use Throwable;
 use Ilias\Maestro\Abstract\Database;
 use Ilias\Maestro\Abstract\Identifier;
 use Ilias\Maestro\Abstract\Query;
@@ -14,7 +16,7 @@ use Ilias\Maestro\Database\Expression;
 use Ilias\Maestro\Utils\Utils;
 
 /**
- * Class Database
+ * Class Manager
  *
  * This class provides methods to create and manage a PostgreSQL database schema,
  * including creating schemas, tables, and foreign key constraints. It also provides
@@ -35,6 +37,13 @@ class Manager
     $this->pdo = PDOConnection::getInstance();
   }
 
+  /**
+   * Create the database schema.
+   *
+   * @param Database $database
+   * @param bool $executeOnComplete
+   * @return array
+   */
   public function createDatabase(Database $database, bool $executeOnComplete = true): array
   {
     $schemasSql = [];
@@ -48,6 +57,7 @@ class Manager
       $tablesSql = array_merge($tablesSql, $create);
       $constraintsSql = array_merge($constraintsSql, ...$constraints);
     }
+
     $sql = array_merge($schemasSql, $tablesSql, $constraintsSql);
     if ($executeOnComplete) {
       foreach ($sql as $query) {
@@ -58,26 +68,37 @@ class Manager
     return $sql;
   }
 
+  /**
+   * Create a schema.
+   *
+   * @param string|Schema $schema
+   * @return string
+   * @throws InvalidArgumentException
+   */
   public function createSchema(string|Schema $schema): string
   {
-    if (gettype($schema) === "string" && is_subclass_of($schema, Schema::class)) {
+    if (is_string($schema) && is_subclass_of($schema, Schema::class)) {
       if (!Utils::isFinalClass($schema)) {
         throw new NotFinalExceptions("The " . Utils::sanitizeForPostgres($schema) . " class was not identified as \"final\".");
       }
       try {
         $schemaName = call_user_func("{$schema}::getSanitizedName");
-        if ($this->strictType === Maestro::SQL_STRICT) {
-          return "CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\";";
-        } else {
-          return "CREATE SCHEMA \"{$schemaName}\";";
-        }
+        return $this->strictType === Maestro::SQL_STRICT
+          ? "CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\";"
+          : "CREATE SCHEMA \"{$schemaName}\";";
       } catch (Throwable) {
         throw new InvalidArgumentException('The getSanitizedName method was not implemented in the provided schema class.');
       }
     }
-    throw new InvalidArgumentException('The provided $schema is not a real schema. Is recommended to use <SchemaClass>::class to get the full schema namespace.', 1);
+    throw new InvalidArgumentException('The provided $schema is not a real schema. Use <SchemaClass>::class to get the full schema namespace.');
   }
 
+  /**
+   * Create tables for a schema.
+   *
+   * @param string|Schema $schema
+   * @return array
+   */
   public function createSchemaTables(string|Schema $schema): array
   {
     $create = [];
@@ -94,6 +115,13 @@ class Manager
     return [$create, $constraints];
   }
 
+  /**
+   * Create a table.
+   *
+   * @param string $table
+   * @return string
+   * @throws NotFinalExceptions
+   */
   public function createTable(string $table): string
   {
     if (!Utils::isFinalClass($table)) {
@@ -101,7 +129,6 @@ class Manager
     }
 
     $reflectionClass = new \ReflectionClass($table);
-
     $tableName = $table::getSanitizedName();
     $columns = $table::tableColumns();
     $primaryColumn = $table::tableIdentifier();
@@ -113,32 +140,26 @@ class Manager
 
     foreach ($columns as $name => $type) {
       $sanitizedColumnName = Utils::sanitizeForPostgres($name);
-      $isIdentifier =  Utils::isIdentifier($type);
-      if ($this->strictType === Maestro::SQL_STRICT) {
-        $columnDef = "\"{$sanitizedColumnName}\" {$this->getColumnType($type)}";
-      } else {
-        $columnDef = "{$sanitizedColumnName} {$this->getColumnType($type)}";
-      }
+      $isIdentifier = Utils::isIdentifier($type);
+      $columnDef = $this->strictType === Maestro::SQL_STRICT
+        ? "\"{$sanitizedColumnName}\" {$this->getColumnType($type)}"
+        : "{$sanitizedColumnName} {$this->getColumnType($type)}";
 
       if (in_array($name, $notNullColumns) || $isIdentifier) {
         $columnDef .= ' NOT NULL';
-      } else {
-        if ($this->strictType === Maestro::SQL_STRICT) {
-          $columnDef .= ' NULL';
-        }
+      } elseif ($this->strictType === Maestro::SQL_STRICT) {
+        $columnDef .= ' NULL';
       }
 
       if (isset($primaryColumn[$name])) {
-        $columnDef .= (' ' . implode(' ', self::$idCreationPattern));
+        $columnDef .= ' ' . implode(' ', self::$idCreationPattern);
       }
 
       $defaultValue = $this->getPropertyDefaultValue($reflectionClass, $name);
       if ($defaultValue !== null) {
-        if (is_array($type) && $type[1] === Expression::class) {
-          $columnDef .= " DEFAULT {$defaultValue}";
-        } else {
-          $columnDef .= " DEFAULT {$this->formatDefaultValue($defaultValue)}";
-        }
+        $columnDef .= is_array($type) && $type[1] === Expression::class
+          ? " DEFAULT {$defaultValue}"
+          : " DEFAULT {$this->formatDefaultValue($defaultValue)}";
       }
 
       if (in_array($name, $uniqueColumns) || $isIdentifier) {
@@ -148,17 +169,21 @@ class Manager
       $columnDefs[] = $columnDef;
     }
 
-    if ($this->strictType === Maestro::SQL_STRICT) {
-      $query = "CREATE TABLE IF NOT EXISTS \"$schemaName\".\"$tableName\"";
-    } else {
-      $query = "CREATE TABLE \"$schemaName\".\"$tableName\"";
-    }
+    $query = $this->strictType === Maestro::SQL_STRICT
+      ? "CREATE TABLE IF NOT EXISTS \"$schemaName\".\"$tableName\""
+      : "CREATE TABLE \"$schemaName\".\"$tableName\"";
     $query .= " (\n\t" . implode(",\n\t", $columnDefs) . "\n);";
 
     return $query;
   }
 
-  public function getColumnType($type)
+  /**
+   * Get the column type.
+   *
+   * @param mixed $type
+   * @return string
+   */
+  public function getColumnType(mixed $type): string
   {
     if (is_subclass_of($type, Table::class)) {
       foreach ($type::tableIdentifier() as $value) {
@@ -174,8 +199,15 @@ class Manager
     if (is_string($type)) {
       return Utils::getPostgresType($type);
     }
+    throw new InvalidArgumentException('Invalid column type provided.');
   }
 
+  /**
+   * Create foreign key constraints for a table.
+   *
+   * @param string $table
+   * @return array
+   */
   public function createForeignKeyConstraints(string $table): array
   {
     $schemaName = $this->schemaNameFromTable($table);
@@ -187,7 +219,6 @@ class Manager
       if (is_subclass_of($type, Table::class)) {
         $referencedTable = $type::getSanitizedName();
         $referencedSchema = $this->schemaNameFromTable($type);
-
         $sanitizedName = Utils::sanitizeForPostgres($name);
         $constraints[] = "ALTER TABLE \"{$schemaName}\".\"{$tableName}\" ADD CONSTRAINT fk_{$tableName}_{$sanitizedName} FOREIGN KEY (\"{$sanitizedName}\") REFERENCES \"{$referencedSchema}\".\"{$referencedTable}\"(\"id\");";
       }
@@ -196,6 +227,12 @@ class Manager
     return $constraints;
   }
 
+  /**
+   * Get not null properties of a class.
+   *
+   * @param \ReflectionClass $reflectionClass
+   * @return array
+   */
   public function getNotNullProperties(\ReflectionClass $reflectionClass): array
   {
     $properties = [];
@@ -216,7 +253,13 @@ class Manager
     return $properties;
   }
 
-  public function schemaNameFromTable($table): string
+  /**
+   * Get the schema name from a table.
+   *
+   * @param string $table
+   * @return string
+   */
+  public function schemaNameFromTable(string $table): string
   {
     $reflectionClass = new \ReflectionClass($table);
     $schemaProperty = $reflectionClass->getProperty('schema');
@@ -224,7 +267,14 @@ class Manager
     return Utils::sanitizeForPostgres((new \ReflectionClass($schemaClass))->getShortName());
   }
 
-  public function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName)
+  /**
+   * Get the default value of a property.
+   *
+   * @param \ReflectionClass $reflectionClass
+   * @param string $propertyName
+   * @return mixed
+   */
+  public function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName): mixed
   {
     $property = $reflectionClass->getProperty($propertyName);
     if ($property->isDefault() && $property->isPublic()) {
@@ -234,6 +284,12 @@ class Manager
     return null;
   }
 
+  /**
+   * Format the default value for SQL.
+   *
+   * @param mixed $value
+   * @return string
+   */
   public function formatDefaultValue(mixed $value): string
   {
     if (is_string($value)) {
@@ -244,7 +300,13 @@ class Manager
     return (string) $value;
   }
 
-
+  /**
+   * Execute a query.
+   *
+   * @param PDO $pdo
+   * @param Query|string $sql
+   * @return array
+   */
   public function executeQuery(PDO $pdo, Query|string $sql): array
   {
     if (is_string($sql)) {
