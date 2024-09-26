@@ -53,4 +53,15 @@ class Utils
     $reflect = new \ReflectionClass($className);
     return $reflect->isFinal();
   }
+
+  public static function isIdentifier(string|array $columnType): bool
+  {
+    if (is_array($columnType) && is_subclass_of($columnType[0], Identifier::class)) {
+      return true;
+    }
+    if (is_subclass_of($columnType, Identifier::class)) {
+      return true;
+    }
+    return false;
+  }
 }
