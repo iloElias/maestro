@@ -39,10 +39,10 @@ class DatabaseManagerTest extends TestCase
     $this->assertEquals($expectedSql, $sql);
   }
 
-  public function testCreateTablesForSchema()
+  public function testcreateSchemaTables()
   {
     $schema = new Hr();
-    $sql = $this->manager->createTablesForSchema($schema);
+    $sql = $this->manager->createSchemaTables($schema);
 
     $expectedSql = [
       "CREATE TABLE IF NOT EXISTS \"hr\".\"user\" (\n\tid SERIAL PRIMARY KEY,\n\tnickname TEXT NOT NULL UNIQUE,\n\temail TEXT NOT NULL UNIQUE,\n\tpassword TEXT NOT NULL,\n\tactive BOOLEAN NOT NULL DEFAULT TRUE,\n\tcreated_in TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n\tupdated_in TIMESTAMP NULL,\n\tinactivated_in TIMESTAMP NULL\n);"
@@ -82,10 +82,10 @@ class DatabaseManagerTest extends TestCase
     $this->assertEquals($expectedConstraints, $constraints);
   }
 
-  public function testGetSchemaNameFromTable()
+  public function testschemaNameFromTable()
   {
     $table = User::class;
-    $schemaName = $this->manager->getSchemaNameFromTable($table);
+    $schemaName = $this->manager->schemaNameFromTable($table);
 
     $expectedSchemaName = "hr";
     $this->assertEquals($expectedSchemaName, $schemaName);

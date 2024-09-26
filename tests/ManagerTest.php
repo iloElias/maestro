@@ -21,7 +21,7 @@ class ManagerTest extends TestCase
 
   public function testCreateTable()
   {
-    $tableClass = Hr::getTables()['user'];
+    $tableClass = Hr::getSchemaTables()['user'];
     $createTableSql = $this->manager->createTable($tableClass);
 
     $expectedSql = 'CREATE TABLE IF NOT EXISTS "hr"."user" (

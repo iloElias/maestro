@@ -10,7 +10,7 @@ abstract class Database extends \stdClass
     return static::class;
   }
 
-  public static function getSchemas(): array
+  public static function getDatabaseSchemas(): array
   {
     $reflection = new \ReflectionClass(static::class);
     $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
@@ -27,31 +27,10 @@ abstract class Database extends \stdClass
   public static function dumpDatabase()
   {
     $databaseMap = [];
-    $schemas = self::getSchemas();
+    $schemas = self::getDatabaseSchemas();
     foreach ($schemas as $schema) {
       $databaseMap[$schema::getSanitizedName()] = $schema::dumpSchema();
     }
     return [self::getSanitizedName() => $databaseMap];
-  }
-
-  public static function prettyPrint()
-  {
-    $databaseName = self::getSanitizedName();
-    echo "Database: $databaseName (Class: " . self::getDatabaseName() . ")\n";
-
-    $schemas = self::getSchemas();
-    foreach ($schemas as $schemaName => $schemaClass) {
-      echo "\tSchema: $schemaName (Class: $schemaClass)\n";
-
-      $tables = $schemaClass::getTables();
-      foreach ($tables as $tableName => $tableClass) {
-        echo "\t\tTable: $tableName (Class: $tableClass)\n";
-
-        $columns = $tableClass::getColumns();
-        foreach ($columns as $columnName => $columnType) {
-          echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
-        }
-      }
-    }
   }
 }

@@ -2,28 +2,33 @@
 
 namespace Ilias\Maestro\Utils;
 
-use Timestamp;
-use Ilias\Maestro\Types\Timestamp as TypesTimestamp;
+use Ilias\Maestro\Abstract\Identifier;
+use Ilias\Maestro\Types\Postgres;
+use Ilias\Maestro\Types\Serial;
+use Ilias\Maestro\Types\Timestamp;
+use Ilias\Maestro\Types\Unique;
 
 class Utils
 {
-  private const PHP_TO_POSTGRES_TYPE_MAP = [
-    "int" => "INTEGER",
-    "integer" => "INTEGER",
-    "float" => "NUMERIC",
-    "double" => "DOUBLE PRECISION",
-    "string" => "TEXT",
-    "bool" => "BOOLEAN",
-    "boolean" => "BOOLEAN",
-    "array" => "JSON",
-    "object" => "JSON",
-    TypesTimestamp::class => "TIMESTAMP",
-    "unknown type" => "text",
+  private const PHP_TO_POSTGRES_TYPE = [
+    "int" => Postgres::INTEGER,
+    "integer" => Postgres::INTEGER,
+    "float" => Postgres::NUMERIC,
+    "double" => Postgres::DOUBLE_PRECISION,
+    "string" => Postgres::TEXT,
+    "bool" => Postgres::BOOLEAN,
+    "boolean" => Postgres::BOOLEAN,
+    "array" => Postgres::JSON,
+    "object" => Postgres::JSON,
+    Timestamp::class => Postgres::TIMESTAMP,
+    Serial::class => Postgres::SERIAL,
+    Unique::class => Postgres::UUID,
+    "unknown type" => Postgres::TEXT,
   ];
 
   public static function getPostgresType(string $phpType)
   {
-    return self::PHP_TO_POSTGRES_TYPE_MAP[$phpType] ?? self::PHP_TO_POSTGRES_TYPE_MAP['unknown type'];
+    return self::PHP_TO_POSTGRES_TYPE[$phpType] ?? self::PHP_TO_POSTGRES_TYPE['unknown type'];
   }
 
   public static function toSnakeCase(string $text)
@@ -52,5 +57,16 @@ class Utils
   {
     $reflect = new \ReflectionClass($className);
     return $reflect->isFinal();
+  }
+
+  public static function isIdentifier(string|array $columnType): bool
+  {
+    if (is_array($columnType) && is_subclass_of($columnType[0], Identifier::class)) {
+      return true;
+    }
+    if (is_subclass_of($columnType, Identifier::class)) {
+      return true;
+    }
+    return false;
   }
 }

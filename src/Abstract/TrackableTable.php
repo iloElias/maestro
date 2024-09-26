@@ -2,13 +2,13 @@
 
 namespace Ilias\Maestro\Abstract;
 
-use DateTime;
-use Ilias\Maestro\Interface\PostgresFunction;
+use Ilias\Maestro\Database\Expression;
+use Ilias\Maestro\Types\Timestamp;
 
 abstract class TrackableTable extends Table
 {
   public bool $active = true;
-  public DateTime | PostgresFunction | string $createdIn = "CURRENT_TIMESTAMP";
-  public DateTime $updatedIn;
-  public DateTime $inactivatedIn;
+  public Timestamp | Expression | string $createdIn = Expression::CURRENT_TIMESTAMP;
+  public Timestamp $updatedIn;
+  public Timestamp $inactivatedIn;
 }

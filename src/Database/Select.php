@@ -3,6 +3,7 @@
 namespace Ilias\Maestro\Database;
 
 use Ilias\Maestro\Abstract\Query;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Utils\Utils;
 
 class Select extends Query
@@ -164,7 +165,7 @@ class Select extends Query
     $orderClause = implode(", ", $this->order);
 
     $sql = [];
-    if ($this->behavior === SqlBehavior::SQL_STRICT || !empty($joins)) {
+    if ($this->behavior === Maestro::SQL_STRICT || !empty($joins)) {
       $sql[] = "SELECT $columns FROM {$this->from} AS {$this->alias}";
     } else {
       $sql[] = "SELECT $columns FROM {$this->from}";

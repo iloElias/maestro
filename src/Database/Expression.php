@@ -4,6 +4,18 @@ namespace Ilias\Maestro\Database;
 
 class Expression
 {
+  public const CURRENT_TIMESTAMP = 'CURRENT_TIMESTAMP';
+  public const NOW = 'NOW()';
+  public const TRUE = 'TRUE';
+  public const FALSE = 'FALSE';
+  public const NULL = 'NULL';
+  public const DEFAULT = 'DEFAULT';
+  public const CURRENT_DATE = 'CURRENT_DATE';
+  public const CURRENT_TIME = 'CURRENT_TIME';
+  public const LOCALTIME = 'LOCALTIME';
+  public const LOCALTIMESTAMP = 'LOCALTIMESTAMP';
+  public const RANDOM_UUID = 'gen_random_uuid()';
+
   public function __construct(
     private string $expression,
   ) {

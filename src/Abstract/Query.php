@@ -3,7 +3,7 @@
 namespace Ilias\Maestro\Abstract;
 
 use Ilias\Maestro\Database\PDOConnection;
-use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException, PDO, Exception, PDOStatement;
 
@@ -15,7 +15,7 @@ abstract class Query
   private bool $isBinded = false;
 
   public function __construct(
-    protected string $behavior = SqlBehavior::SQL_STRICT,
+    protected string $behavior = Maestro::SQL_STRICT,
     private ?PDO $pdo = null,
   ) {
   }
@@ -52,15 +52,15 @@ abstract class Query
     }
 
     try {
-      return call_user_func("{$table}::getTableSchemaAddress");
+      return call_user_func("{$table}::tableFullAddress");
     } catch (\Throwable $e) {
       if (!str_contains($table, ".")) {
         switch ($this->behavior) {
-          case SqlBehavior::SQL_STRICT:
+          case Maestro::SQL_STRICT:
             throw new InvalidArgumentException("In strict SQL mode, table names must be provided as schema.table.");
-          case SqlBehavior::SQL_PREDICT:
+          case Maestro::SQL_PREDICT:
             return "public.{$table}";
-          case SqlBehavior::SQL_NO_PREDICT:
+          case Maestro::SQL_NO_PREDICT:
             return $table;
         }
       }

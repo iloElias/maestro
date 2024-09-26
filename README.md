@@ -59,7 +59,7 @@ You can also define a column as unique by adding the `@unique` clause to the doc
 
 #### Default Values
 
-Columns can have default values. If a default value is a PostgreSQL function, it should be defined as a `PostgresFunction` type to ensure it is not quoted in the final SQL query.
+Columns can have default values. If a default value is a PostgreSQL function, define it using the `Expression` type to ensure it is not quoted in the final SQL query.
 
 ### DatabaseManager
 
@@ -67,7 +67,7 @@ The `DatabaseManager` class provides methods to create schemas, tables, and mana
 
 #### Creating Schemas and Tables
 
-The `createSchema` and `createTable` methods generate SQL queries to create schemas and tables. The `createTablesForSchema` method handles the creation of all tables within a schema and their foreign key constraints.
+The `createSchema` and `createTable` methods generate SQL queries to create schemas and tables. The `createSchemaTables` method creates all tables within a schema and manages their foreign key constraints.
 
 #### Foreign Key Constraints
 
@@ -163,7 +163,7 @@ namespace Maestro\Example;
 
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Abstract\PostgresFunction;
+use Ilias\Maestro\Abstract\Expression;
 use Ilias\Maestro\Types\Timestamp;
 
 final class Hr extends Schema
@@ -177,7 +177,7 @@ final class User extends Table
   public string $username;
   public string $email;
   public string $password;
-  public Timestamp | PostgresFunction | string $createdIn = "CURRENT_TIMESTAMP";
+  public Timestamp | Expression | string $createdIn = "CURRENT_TIMESTAMP";
 
   public function __construct(
     string $username,
@@ -204,7 +204,7 @@ Explanations:
 - `type`: Declare all types of class attributes so that the application can better choose the equivalent data type from the database column.
 - `__construct`: The construct method is used to define the non-nullability of a database column. Add to the constructor arguments the columns that must not be null.
 - `default`: To declare the default value, simply add an initial value to the class attribute.
-- `custom function`: To use a postgres function as the default value, follow the previous step and add the following two typings: `<current type> | PostgresFunction | string` to the attribute type, then the text added as a value will be used as a function.
+- `custom function`: To use a postgres function as the default value, follow the previous step and add the following two typings: `<current type> | Expression | string` to the attribute type, then the text added as a value will be used as a function.
 - `unique`: Override the static `getUniqueColumns` method to return the names of unique columns. Alternatively, use the `@unique` clause in the attribute's documentation, but note this won't work if `getUniqueColumns` is overridden.
 
 #### Generating SQL Queries
@@ -246,7 +246,7 @@ $pdo = PDOConnection::getInstance();
 $dbManager = new DatabaseManager($pdo);
 
 // Create schemas and tables based on the defined classes
-$queries = $dbManager->createTablesForSchema(new Hr());
+$queries = $dbManager->createSchemaTables(new Hr());
 
 foreach ($queries as $query) {
     $dbManager->executeQuery($pdo, $query);

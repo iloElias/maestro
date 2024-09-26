@@ -3,19 +3,30 @@
 namespace Maestro\Example;
 
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Interface\PostgresFunction;
+use Ilias\Maestro\Database\Expression;
+use Ilias\Maestro\Types\Serial;
 use Ilias\Maestro\Types\Timestamp;
+use Ilias\Maestro\Types\Unique;
 
 final class User extends Table
 {
   public Hr $schema;
+  /** @primary */
+  public Serial $id;
+  /** @primary
+   * @not_nuable */
+  public Unique | Expression | string $uuid = Expression::RANDOM_UUID;
+  /** @not_nuable */
+  public string $firstName;
+  /** @not_nuable */
+  public string $lastName;
   /** @unique */
   public string $nickname;
   /** @unique */
   public string $email;
   public string $password;
   public bool $active = true;
-  public Timestamp|PostgresFunction|string $createdIn = PostgresFunction::CURRENT_TIMESTAMP;
+  public Timestamp | Expression | string $createdIn = Expression::CURRENT_TIMESTAMP;
   public Timestamp $updatedIn;
   public Timestamp $inactivatedIn;
 

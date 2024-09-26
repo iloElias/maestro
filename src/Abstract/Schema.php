@@ -7,12 +7,12 @@ use Ilias\Maestro\Utils\Utils;
 abstract class Schema extends \stdClass
 {
   use Sanitizable;
-  public static function getSchemaName(): string
+  public static function schemaName(): string
   {
     return static::class;
   }
 
-  public static function getTables(): array
+  public static function getSchemaTables(): array
   {
     $reflection = new \ReflectionClass(static::class);
     $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
@@ -30,23 +30,10 @@ abstract class Schema extends \stdClass
   public static function dumpSchema(): array
   {
     $tablesMap = [];
-    $tables = self::getTables();
+    $tables = self::getSchemaTables();
     foreach ($tables as $table) {
-      $tablesMap[$table::getSanitizedName()] = $table::dumpTable();
+      $tablesMap[$table::getSanitizedName()] = $table::tableColumns();
     }
     return $tablesMap;
-  }
-
-  public static function prettyPrint()
-  {
-    $tables = self::getTables();
-    foreach ($tables as $tableName => $tableClass) {
-      echo "\t\tTable: $tableName (Class: $tableClass)\n";
-
-      $columns = $tableClass::getColumns();
-      foreach ($columns as $columnName => $columnType) {
-        echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
-      }
-    }
   }
 }

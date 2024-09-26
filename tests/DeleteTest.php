@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Delete;
-use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\User;
 
@@ -12,11 +12,11 @@ class DeleteTest extends TestCase
 {
   public function testDelete()
   {
-    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
+    $delete = new Delete(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $conditions = ['email' => 'email@example.com'];
 
-    $delete->from($table::getTableName())->where($conditions);
+    $delete->from($table::tableName())->where($conditions);
 
     $expectedSql = "DELETE FROM user WHERE email = :where_email";
     $expectedParams = [':where_email' => "'email@example.com'"];
@@ -27,11 +27,11 @@ class DeleteTest extends TestCase
 
   public function testDeleteWithInClause()
   {
-    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
+    $delete = new Delete(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $conditions = ['id' => [1, 2, 3]];
 
-    $delete->from($table::getTableName())->in($conditions);
+    $delete->from($table::tableName())->in($conditions);
 
     $expectedSql = "DELETE FROM user WHERE id IN(:in_id_0,:in_id_1,:in_id_2)";
     $expectedParams = [':in_id_0' => 1, ':in_id_1' => 2, ':in_id_2' => 3];
@@ -42,11 +42,11 @@ class DeleteTest extends TestCase
 
   public function testDeleteWithMultipleConditions()
   {
-    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
+    $delete = new Delete(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $conditions = ['email' => 'email@example.com', 'active' => false];
 
-    $delete->from($table::getTableName())->where($conditions);
+    $delete->from($table::tableName())->where($conditions);
 
     $expectedSql = "DELETE FROM user WHERE email = :where_email AND active = :where_active";
     $expectedParams = [':where_email' => "'email@example.com'", ':where_active' => 'false'];
@@ -57,10 +57,10 @@ class DeleteTest extends TestCase
 
   public function testDeleteWithoutConditions()
   {
-    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
+    $delete = new Delete(Maestro::SQL_NO_PREDICT);
     $table = User::class;
 
-    $delete->from($table::getTableName());
+    $delete->from($table::tableName());
 
     $expectedSql = "DELETE FROM user";
     $expectedParams = [];
@@ -71,14 +71,14 @@ class DeleteTest extends TestCase
 
   public function testMultipleInConditions()
   {
-    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
+    $delete = new Delete(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $conditions = [
       'id' => [1, 2, 3],
       'group_id' => [10, 20, 30]
     ];
 
-    $delete->from($table::getTableName())->in($conditions);
+    $delete->from($table::tableName())->in($conditions);
 
     $expectedSql = "DELETE FROM user WHERE id IN(:in_id_0,:in_id_1,:in_id_2) AND group_id IN(:in_group_id_0,:in_group_id_1,:in_group_id_2)";
     $expectedParams = [
@@ -96,12 +96,12 @@ class DeleteTest extends TestCase
 
   public function testDeleteWithTimestampCondition()
   {
-    $delete = new Delete(SqlBehavior::SQL_NO_PREDICT);
+    $delete = new Delete(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $date = new Timestamp();
     $conditions = ['created_at' => $date];
 
-    $delete->from($table::getTableName())->where($conditions);
+    $delete->from($table::tableName())->where($conditions);
 
     $expectedSql = "DELETE FROM user WHERE created_at = :where_created_at";
     $expectedParams = [':where_created_at' => "'{$date}'"];

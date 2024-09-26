@@ -1,6 +1,9 @@
 <?php
 
 namespace Ilias\Maestro\Abstract;
+
+use Exception;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 
@@ -8,17 +11,17 @@ abstract class Table extends \stdClass
 {
   use Sanitizable;
 
-  public static function getTableName(): string
+  public function __toString()
+  {
+    return $this->tableFullAddress();
+  }
+
+  public static function tableName(): string
   {
     return self::getSanitizedName();
   }
 
-  public function __toString()
-  {
-    return $this->getTableSchemaAddress();
-  }
-
-  public static function getTableSchemaAddress(): string
+  final public static function tableFullAddress(): string
   {
     $reflection = new \ReflectionClass(static::class);
     $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
@@ -27,7 +30,22 @@ abstract class Table extends \stdClass
     return "\"{$tableSchema}\".\"{$tableName}\"";
   }
 
-  public static function getColumns(): array
+  final public static function tableIdentifier(): array
+  {
+    foreach (static::tableColumns() as $name => $type) {
+      if (is_array($type)) {
+        if (is_subclass_of($type[0], Identifier::class)) {
+          return [Utils::toSnakeCase($name) => "{$type[0]}"];
+        }
+      }
+      if (is_subclass_of($type, Identifier::class)) {
+        return [Utils::toSnakeCase($name) => "{$type}"];
+      }
+    }
+    throw new Exception('No identifier found for table ' . static::tableFullAddress());
+  }
+
+  public static function tableColumns(): array
   {
     $reflection = new \ReflectionClass(static::class);
     $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
@@ -35,12 +53,13 @@ abstract class Table extends \stdClass
 
     foreach ($properties as $property) {
       if ($property->getName() !== 'schema') {
-        try {
-          $columns[$property->getName()] = $property->getType()->getName();
-        } catch (\Throwable) {
-          foreach ($property->getType()->getTypes() as $type) {
+        $propertyType = $property->getType();
+        if ($propertyType instanceof \ReflectionUnionType) {
+          foreach ($propertyType->getTypes() as $type) {
             $columns[$property->getName()][] = (string) $type;
           }
+        } else {
+          $columns[$property->getName()] = $propertyType->getName();
         }
       }
     }
@@ -48,35 +67,20 @@ abstract class Table extends \stdClass
     return $columns;
   }
 
-  public static function getTableCreationInfo(): array
+  public static function tableCreationInfo(): array
   {
     return [
       'tableName' => static::getSanitizedName(),
-      'columns' => static::getColumns()
+      'columns' => static::tableColumns()
     ];
   }
 
-  public static function getSanitizedName(): string
-  {
-    $reflect = new \ReflectionClass(static::class);
-    return strtolower($reflect->getShortName());
-  }
-
-
-  public static function dumpTable(): array
-  {
-    return self::getColumns();
-  }
-
-  public static function prettyPrint()
-  {
-    $columns = self::getColumns();
-    foreach ($columns as $columnName => $columnType) {
-      echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
-    }
-  }
-
   public static function getUniqueColumns(): array
+  {
+    return self::tableColumnsProperties(Maestro::DOC_UNIQUE);
+  }
+
+  public static function tableColumnsProperties(string $atDocClause = ''): array
   {
     $reflection = new \ReflectionClass(static::class);
     $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
@@ -84,7 +88,7 @@ abstract class Table extends \stdClass
 
     foreach ($properties as $property) {
       $docComment = $property->getDocComment();
-      if ($docComment && strpos($docComment, '@unique') !== false) {
+      if ($docComment && strpos($docComment, $atDocClause) !== false) {
         $uniqueColumns[] = $property->getName();
       }
     }
@@ -92,7 +96,7 @@ abstract class Table extends \stdClass
     return $uniqueColumns;
   }
 
-  public static function generateAlias(array $existingAlias = []): string
+  public static function generateTableAlias(array $existingAlias = []): string
   {
     $baseAlias = strtolower((new \ReflectionClass(static::class))->getShortName());
     $alias = $baseAlias;
@@ -117,7 +121,7 @@ abstract class Table extends \stdClass
   public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100): array
   {
     $select = new Select();
-    $select->from([static::generateAlias() => static::getTableSchemaAddress()]);
+    $select->from([static::generateTableAlias() => static::tableFullAddress()]);
     if (!empty($prediction)) {
       if (is_array($prediction)) {
         $select->where($prediction);
