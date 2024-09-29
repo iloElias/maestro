@@ -10,7 +10,7 @@ abstract class Table extends \stdClass
 {
   use Sanitizable;
 
-  public static function getTableName(): string
+  public static function tableName(): string
   {
     return self::tableSanitizedName();
   }
@@ -21,6 +21,15 @@ abstract class Table extends \stdClass
   }
 
   public static function getTableSchemaAddress(): string
+  {
+    $reflection = new \ReflectionClass(static::class);
+    $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
+    $tableSchema = Utils::sanitizeForPostgres($schemaNamespace[array_key_last($schemaNamespace)]);
+    $tableName = self::tableSanitizedName();
+    return "\"{$tableSchema}\".\"{$tableName}\"";
+  }
+
+  final public static function tableFullAddress(): string
   {
     $reflection = new \ReflectionClass(static::class);
     $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
@@ -65,7 +74,7 @@ abstract class Table extends \stdClass
     throw new Exception('No identifier found for table ' . static::tableFullAddress());
   }
 
-  public static function getTableCreationInfo(): array
+  public static function tableCreationInfo(): array
   {
     return [
       'tableName' => static::tableSanitizedName(),
