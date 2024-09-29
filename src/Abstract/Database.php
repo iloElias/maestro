@@ -2,9 +2,14 @@
 
 namespace Ilias\Maestro\Abstract;
 
+use Ilias\Maestro\Database\DatabaseFunction;
+
 abstract class Database extends \stdClass
 {
   use Sanitizable;
+
+  private static array $functions = [];
+
   public static function getDatabaseName(): string
   {
     return static::class;
@@ -24,19 +29,29 @@ abstract class Database extends \stdClass
     return $schemas;
   }
 
+  public static function declareFunction(string $name, string $returnType, string $sqlDefinition)
+  {
+    self::$functions[$name] = new DatabaseFunction($name, $returnType, $sqlDefinition);
+  }
+
+  public static function getFunctions(): array
+  {
+    return self::$functions;
+  }
+
   public static function dumpDatabase()
   {
     $databaseMap = [];
     $schemas = self::getSchemas();
     foreach ($schemas as $schema) {
-      $databaseMap[$schema::tableSanitizedName()] = $schema::dumpSchema();
+      $databaseMap[$schema::sanitizedName()] = $schema::dumpSchema();
     }
-    return [self::tableSanitizedName() => $databaseMap];
+    return [self::sanitizedName() => $databaseMap];
   }
 
   public static function prettyPrint()
   {
-    $databaseName = self::tableSanitizedName();
+    $databaseName = self::sanitizedName();
     echo "Database: $databaseName (Class: " . self::getDatabaseName() . ")\n";
 
     $schemas = self::getSchemas();

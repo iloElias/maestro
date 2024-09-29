@@ -49,7 +49,7 @@ class Manager
     $schemasSql = [];
     $tablesSql = [];
     $constraintsSql = [];
-    $functionsSql = [];
+    $functionsSql = $this->createDatabaseFunctions($database);
     $schemas = $database::getSchemas();
 
     foreach ($schemas as $schemaClass) {
@@ -57,7 +57,6 @@ class Manager
       [$create, $constraints] = $this->createSchemaTables($schemaClass);
       $tablesSql = array_merge($tablesSql, $create);
       $constraintsSql = array_merge($constraintsSql, ...$constraints);
-      $functionsSql = array_merge($functionsSql, $this->createSchemaFunctions($schemaClass));
     }
 
     $sql = array_merge($schemasSql, $tablesSql, $constraintsSql, $functionsSql);
@@ -84,12 +83,12 @@ class Manager
         throw new NotFinalExceptions("The " . Utils::sanitizeForPostgres($schema) . " class was not identified as \"final\".");
       }
       try {
-        $schemaName = call_user_func("{$schema}::tableSanitizedName");
+        $schemaName = call_user_func("{$schema}::sanitizedName");
         return $this->strictType === Maestro::SQL_STRICT
           ? "CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\";"
           : "CREATE SCHEMA \"{$schemaName}\";";
       } catch (Throwable) {
-        throw new InvalidArgumentException('The tableSanitizedName method was not implemented in the provided schema class.');
+        throw new InvalidArgumentException('The sanitizedName method was not implemented in the provided schema class.');
       }
     }
     throw new InvalidArgumentException('The provided $schema is not a real schema. Use <SchemaClass>::class to get the full schema namespace.');
@@ -127,16 +126,16 @@ class Manager
   public function createTable(string $table): string
   {
     if (!Utils::isFinalClass($table)) {
-      throw new NotFinalExceptions("The " . $table::tableSanitizedName() . " class was not identified as \"final\"");
+      throw new NotFinalExceptions("The " . $table::sanitizedName() . " class was not identified as \"final\"");
     }
 
     $reflectionClass = new \ReflectionClass($table);
-    $tableName = $table::tableSanitizedName();
+    $schemaName = $this->schemaNameFromTable($table);
+    $tableName = $table::sanitizedName();
     $columns = $table::tableColumns();
     $primaryColumn = $table::tableIdentifier();
     $uniqueColumns = $table::tableUniqueColumns();
     $notNullColumns = $this->getNotNullProperties($reflectionClass);
-    $schemaName = $this->schemaNameFromTable($table);
 
     $columnDefs = [];
 
@@ -185,11 +184,11 @@ class Manager
    * @param string|Schema $schema
    * @return array
    */
-  public function createSchemaFunctions(string|Schema $schema): array
+  public function createDatabaseFunctions(string|Database $database): array
   {
     $functionsSql = [];
-    new $schema();
-    $functions = $schema::getFunctions();
+    new $database();
+    $functions = $database::getFunctions();
 
     foreach ($functions as $function) {
       $functionsSql[] = $function->getSqlDefinition();
@@ -232,15 +231,15 @@ class Manager
   public function createForeignKeyConstraints(string $table): array
   {
     $schemaName = $this->schemaNameFromTable($table);
-    $tableName = $table::tableSanitizedName();
+    $tableName = $table::sanitizedName();
     $columns = $table::tableColumns();
     $constraints = [];
 
     foreach ($columns as $name => $type) {
       if (is_subclass_of($type, Table::class)) {
-        $referencedTable = $type::tableSanitizedName();
+        $referencedTable = $type::sanitizedName();
         $referencedSchema = $this->schemaNameFromTable($type);
-        $sanitizedName = Utils::sanitizeForPostgres($name);
+        $sanitizedName = Utils::toSnakeCase($name);
         $constraints[] = "ALTER TABLE \"{$schemaName}\".\"{$tableName}\" ADD CONSTRAINT fk_{$tableName}_{$sanitizedName} FOREIGN KEY (\"{$sanitizedName}\") REFERENCES \"{$referencedSchema}\".\"{$referencedTable}\"(\"id\");";
       }
     }

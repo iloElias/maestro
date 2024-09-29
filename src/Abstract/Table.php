@@ -13,7 +13,7 @@ abstract class Table extends \stdClass
 
   public static function tableName(): string
   {
-    return self::tableSanitizedName();
+    return self::sanitizedName();
   }
 
   public function __toString()
@@ -26,7 +26,7 @@ abstract class Table extends \stdClass
     $reflection = new \ReflectionClass(static::class);
     $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
     $tableSchema = Utils::sanitizeForPostgres($schemaNamespace[array_key_last($schemaNamespace)]);
-    $tableName = self::tableSanitizedName();
+    $tableName = self::sanitizedName();
     return "\"{$tableSchema}\".\"{$tableName}\"";
   }
 
@@ -35,7 +35,7 @@ abstract class Table extends \stdClass
     $reflection = new \ReflectionClass(static::class);
     $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
     $tableSchema = Utils::sanitizeForPostgres($schemaNamespace[array_key_last($schemaNamespace)]);
-    $tableName = self::tableSanitizedName();
+    $tableName = self::sanitizedName();
     return "\"{$tableSchema}\".\"{$tableName}\"";
   }
 
@@ -99,17 +99,10 @@ abstract class Table extends \stdClass
   public static function tableCreationInfo(): array
   {
     return [
-      'tableName' => static::tableSanitizedName(),
+      'tableName' => static::sanitizedName(),
       'columns' => static::tableColumns()
     ];
   }
-
-  public static function tableSanitizedName(): string
-  {
-    $reflect = new \ReflectionClass(static::class);
-    return strtolower($reflect->getShortName());
-  }
-
 
   public static function dumpTable(): array
   {

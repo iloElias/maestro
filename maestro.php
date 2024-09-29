@@ -2,6 +2,7 @@
 
 use Ilias\Maestro\Core\Manager;
 use Ilias\Maestro\Types\Timestamp;
+use Ilias\Maestro\Utils\Utils;
 use Maestro\Example\MaestroDb;
 use Maestro\Example\User;
 
