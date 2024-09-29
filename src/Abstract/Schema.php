@@ -2,11 +2,13 @@
 
 namespace Ilias\Maestro\Abstract;
 
+use Ilias\Maestro\Database\DatabaseFunction;
 use Ilias\Maestro\Utils\Utils;
 
 abstract class Schema extends \stdClass
 {
   use Sanitizable;
+  private static array $functions = [];
   public static function getSchemaName(): string
   {
     return static::class;
@@ -25,6 +27,16 @@ abstract class Schema extends \stdClass
       }
     }
     return $tables;
+  }
+
+  public static function declareFunction(string $name, string $returnType, string $sqlDefinition)
+  {
+    self::$functions[$name] = new DatabaseFunction($name, $returnType, $sqlDefinition);
+  }
+
+  public static function getFunctions(): array
+  {
+    return self::$functions;
   }
 
   public static function dumpSchema(): array

@@ -253,8 +253,6 @@ foreach ($queries as $query) {
 }
 ```
 
-Sure! Here are the explanations for the available commands that can be included in the `README.md`:
-
 ### Commands
 
 Maestro provides several commands to help you manage and synchronize your database schema. Here are the available commands:

@@ -49,6 +49,7 @@ class Manager
     $schemasSql = [];
     $tablesSql = [];
     $constraintsSql = [];
+    $functionsSql = [];
     $schemas = $database::getSchemas();
 
     foreach ($schemas as $schemaClass) {
@@ -56,9 +57,10 @@ class Manager
       [$create, $constraints] = $this->createSchemaTables($schemaClass);
       $tablesSql = array_merge($tablesSql, $create);
       $constraintsSql = array_merge($constraintsSql, ...$constraints);
+      $functionsSql = array_merge($functionsSql, $this->createSchemaFunctions($schemaClass));
     }
 
-    $sql = array_merge($schemasSql, $tablesSql, $constraintsSql);
+    $sql = array_merge($schemasSql, $tablesSql, $constraintsSql, $functionsSql);
     if ($executeOnComplete) {
       foreach ($sql as $query) {
         $this->executeQuery($this->pdo, $query);
@@ -175,6 +177,25 @@ class Manager
     $query .= " (\n\t" . implode(",\n\t", $columnDefs) . "\n);";
 
     return $query;
+  }
+
+  /**
+   * Create functions for a schema.
+   *
+   * @param string|Schema $schema
+   * @return array
+   */
+  public function createSchemaFunctions(string|Schema $schema): array
+  {
+    $functionsSql = [];
+    new $schema();
+    $functions = $schema::getFunctions();
+
+    foreach ($functions as $function) {
+      $functionsSql[] = $function->getSqlDefinition();
+    }
+
+    return $functionsSql;
   }
 
   /**

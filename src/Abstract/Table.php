@@ -3,6 +3,7 @@
 namespace Ilias\Maestro\Abstract;
 
 use Exception;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 
@@ -57,6 +58,27 @@ abstract class Table extends \stdClass
     }
 
     return $columns;
+  }
+
+  public static function getUniqueColumns(): array
+  {
+    return self::tableColumnsProperties(Maestro::DOC_UNIQUE);
+  }
+
+  public static function tableColumnsProperties(string $atDocClause = ''): array
+  {
+    $reflection = new \ReflectionClass(static::class);
+    $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+    $uniqueColumns = [];
+
+    foreach ($properties as $property) {
+      $docComment = $property->getDocComment();
+      if ($docComment && strpos($docComment, $atDocClause) !== false) {
+        $uniqueColumns[] = $property->getName();
+      }
+    }
+
+    return $uniqueColumns;
   }
 
   final public static function tableIdentifier(): array
