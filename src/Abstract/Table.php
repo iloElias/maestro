@@ -1,6 +1,8 @@
 <?php
 
 namespace Ilias\Maestro\Abstract;
+
+use Exception;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 
@@ -46,6 +48,21 @@ abstract class Table extends \stdClass
     }
 
     return $columns;
+  }
+
+  final public static function tableIdentifier(): array
+  {
+    foreach (static::tableColumns() as $name => $type) {
+      if (is_array($type)) {
+        if (is_subclass_of($type[0], Identifier::class)) {
+          return [Utils::toSnakeCase($name) => "{$type[0]}"];
+        }
+      }
+      if (is_subclass_of($type, Identifier::class)) {
+        return [Utils::toSnakeCase($name) => "{$type}"];
+      }
+    }
+    throw new Exception('No identifier found for table ' . static::tableFullAddress());
   }
 
   public static function getTableCreationInfo(): array
