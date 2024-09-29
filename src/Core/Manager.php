@@ -82,12 +82,12 @@ class Manager
         throw new NotFinalExceptions("The " . Utils::sanitizeForPostgres($schema) . " class was not identified as \"final\".");
       }
       try {
-        $schemaName = call_user_func("{$schema}::getSanitizedName");
+        $schemaName = call_user_func("{$schema}::tableSanitizedName");
         return $this->strictType === Maestro::SQL_STRICT
           ? "CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\";"
           : "CREATE SCHEMA \"{$schemaName}\";";
       } catch (Throwable) {
-        throw new InvalidArgumentException('The getSanitizedName method was not implemented in the provided schema class.');
+        throw new InvalidArgumentException('The tableSanitizedName method was not implemented in the provided schema class.');
       }
     }
     throw new InvalidArgumentException('The provided $schema is not a real schema. Use <SchemaClass>::class to get the full schema namespace.');
@@ -125,14 +125,14 @@ class Manager
   public function createTable(string $table): string
   {
     if (!Utils::isFinalClass($table)) {
-      throw new NotFinalExceptions("The " . $table::getSanitizedName() . " class was not identified as \"final\"");
+      throw new NotFinalExceptions("The " . $table::tableSanitizedName() . " class was not identified as \"final\"");
     }
 
     $reflectionClass = new \ReflectionClass($table);
-    $tableName = $table::getSanitizedName();
+    $tableName = $table::tableSanitizedName();
     $columns = $table::tableColumns();
     $primaryColumn = $table::tableIdentifier();
-    $uniqueColumns = $table::getUniqueColumns();
+    $uniqueColumns = $table::tableUniqueColumns();
     $notNullColumns = $this->getNotNullProperties($reflectionClass);
     $schemaName = $this->schemaNameFromTable($table);
 
@@ -157,7 +157,7 @@ class Manager
 
       $defaultValue = $this->getPropertyDefaultValue($reflectionClass, $name);
       if ($defaultValue !== null) {
-        $columnDef .= is_array($type) && $type[1] === Expression::class
+        $columnDef .= is_array($type) && in_array(Expression::class, $type)
           ? " DEFAULT {$defaultValue}"
           : " DEFAULT {$this->formatDefaultValue($defaultValue)}";
       }
@@ -211,13 +211,13 @@ class Manager
   public function createForeignKeyConstraints(string $table): array
   {
     $schemaName = $this->schemaNameFromTable($table);
-    $tableName = $table::getSanitizedName();
+    $tableName = $table::tableSanitizedName();
     $columns = $table::tableColumns();
     $constraints = [];
 
     foreach ($columns as $name => $type) {
       if (is_subclass_of($type, Table::class)) {
-        $referencedTable = $type::getSanitizedName();
+        $referencedTable = $type::tableSanitizedName();
         $referencedSchema = $this->schemaNameFromTable($type);
         $sanitizedName = Utils::sanitizeForPostgres($name);
         $constraints[] = "ALTER TABLE \"{$schemaName}\".\"{$tableName}\" ADD CONSTRAINT fk_{$tableName}_{$sanitizedName} FOREIGN KEY (\"{$sanitizedName}\") REFERENCES \"{$referencedSchema}\".\"{$referencedTable}\"(\"id\");";

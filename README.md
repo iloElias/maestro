@@ -54,8 +54,8 @@ A table class extends the `Table` abstract class. It can define columns as class
 
 #### Unique Columns
 
-You can specify columns that should be unique by overriding the `getUniqueColumns` method in your table class.
-You can also define a column as unique by adding the `@unique` clause to the documentation of the attribute you want to make unique. This format will not work if the `getUniqueColumns` method is overridden.
+You can specify columns that should be unique by overriding the `tableUniqueColumns` method in your table class.
+You can also define a column as unique by adding the `@unique` clause to the documentation of the attribute you want to make unique. This format will not work if the `tableUniqueColumns` method is overridden.
 
 #### Default Values
 
@@ -191,7 +191,7 @@ final class User extends Table
     $this->createdIn = $createdIn;
   }
 
-  public static function getUniqueColumns(): array
+  public static function tableUniqueColumns(): array
   {
     return ["username", "email"];
   }
@@ -205,7 +205,7 @@ Explanations:
 - `__construct`: The construct method is used to define the non-nullability of a database column. Add to the constructor arguments the columns that must not be null.
 - `default`: To declare the default value, simply add an initial value to the class attribute.
 - `custom function`: To use a postgres function as the default value, follow the previous step and add the following two typings: `<current type> | PostgresFunction | string` to the attribute type, then the text added as a value will be used as a function.
-- `unique`: Override the static `getUniqueColumns` method to return the names of unique columns. Alternatively, use the `@unique` clause in the attribute's documentation, but note this won't work if `getUniqueColumns` is overridden.
+- `unique`: Override the static `tableUniqueColumns` method to return the names of unique columns. Alternatively, use the `@unique` clause in the attribute's documentation, but note this won't work if `tableUniqueColumns` is overridden.
 
 #### Generating SQL Queries
 

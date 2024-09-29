@@ -7,5 +7,5 @@ use Ilias\Maestro\Abstract\Database;
 final class MaestroDb extends Database
 {
   public Hr $hr;
-  public Social $social;
+  // public Social $social;
 }

@@ -32,7 +32,7 @@ abstract class Schema extends \stdClass
     $tablesMap = [];
     $tables = self::getTables();
     foreach ($tables as $table) {
-      $tablesMap[$table::getSanitizedName()] = $table::dumpTable();
+      $tablesMap[$table::tableSanitizedName()] = $table::dumpTable();
     }
     return $tablesMap;
   }
@@ -43,7 +43,7 @@ abstract class Schema extends \stdClass
     foreach ($tables as $tableName => $tableClass) {
       echo "\t\tTable: $tableName (Class: $tableClass)\n";
 
-      $columns = $tableClass::getColumns();
+      $columns = $tableClass::tableColumns();
       foreach ($columns as $columnName => $columnType) {
         echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
       }

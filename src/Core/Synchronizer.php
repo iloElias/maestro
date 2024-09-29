@@ -36,7 +36,7 @@ class Synchronizer
 
     foreach ($ormDb::getSchemas() as $schemaName => $schema) {
       foreach ($schema::getTables() as $tableName => $table) {
-        $columns = $table::getColumns();
+        $columns = $table::tableColumns();
         foreach ($columns as $columnName => $column) {
           $vector[$schemaName][$tableName][$columnName] = [
             'type' => $column['type'],

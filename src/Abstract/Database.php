@@ -29,14 +29,14 @@ abstract class Database extends \stdClass
     $databaseMap = [];
     $schemas = self::getSchemas();
     foreach ($schemas as $schema) {
-      $databaseMap[$schema::getSanitizedName()] = $schema::dumpSchema();
+      $databaseMap[$schema::tableSanitizedName()] = $schema::dumpSchema();
     }
-    return [self::getSanitizedName() => $databaseMap];
+    return [self::tableSanitizedName() => $databaseMap];
   }
 
   public static function prettyPrint()
   {
-    $databaseName = self::getSanitizedName();
+    $databaseName = self::tableSanitizedName();
     echo "Database: $databaseName (Class: " . self::getDatabaseName() . ")\n";
 
     $schemas = self::getSchemas();
@@ -47,7 +47,7 @@ abstract class Database extends \stdClass
       foreach ($tables as $tableName => $tableClass) {
         echo "\t\tTable: $tableName (Class: $tableClass)\n";
 
-        $columns = $tableClass::getColumns();
+        $columns = $tableClass::tableColumns();
         foreach ($columns as $columnName => $columnType) {
           echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
         }

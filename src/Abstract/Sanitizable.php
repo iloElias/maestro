@@ -6,7 +6,7 @@ use Ilias\Maestro\Utils\Utils;
 
 trait Sanitizable
 {
-  public static function getSanitizedName(): string
+  public static function tableSanitizedName(): string
   {
     $spreadClassName = explode("\\", static::class);
     return Utils::sanitizeForPostgres($spreadClassName[count($spreadClassName) - 1]);

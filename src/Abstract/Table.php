@@ -10,7 +10,7 @@ abstract class Table extends \stdClass
 
   public static function getTableName(): string
   {
-    return self::getSanitizedName();
+    return self::tableSanitizedName();
   }
 
   public function __toString()
@@ -23,11 +23,11 @@ abstract class Table extends \stdClass
     $reflection = new \ReflectionClass(static::class);
     $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
     $tableSchema = Utils::sanitizeForPostgres($schemaNamespace[array_key_last($schemaNamespace)]);
-    $tableName = self::getSanitizedName();
+    $tableName = self::tableSanitizedName();
     return "\"{$tableSchema}\".\"{$tableName}\"";
   }
 
-  public static function getColumns(): array
+  public static function tableColumns(): array
   {
     $reflection = new \ReflectionClass(static::class);
     $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
@@ -51,12 +51,12 @@ abstract class Table extends \stdClass
   public static function getTableCreationInfo(): array
   {
     return [
-      'tableName' => static::getSanitizedName(),
-      'columns' => static::getColumns()
+      'tableName' => static::tableSanitizedName(),
+      'columns' => static::tableColumns()
     ];
   }
 
-  public static function getSanitizedName(): string
+  public static function tableSanitizedName(): string
   {
     $reflect = new \ReflectionClass(static::class);
     return strtolower($reflect->getShortName());
@@ -65,18 +65,18 @@ abstract class Table extends \stdClass
 
   public static function dumpTable(): array
   {
-    return self::getColumns();
+    return self::tableColumns();
   }
 
   public static function prettyPrint()
   {
-    $columns = self::getColumns();
+    $columns = self::tableColumns();
     foreach ($columns as $columnName => $columnType) {
       echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
     }
   }
 
-  public static function getUniqueColumns(): array
+  public static function tableUniqueColumns(): array
   {
     $reflection = new \ReflectionClass(static::class);
     $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
