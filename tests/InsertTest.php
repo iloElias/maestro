@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Insert;
-use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\User;
 
@@ -12,7 +12,7 @@ class InsertTest extends TestCase
 {
   public function testInsert()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com', 'password' => 'password'];
 
@@ -27,7 +27,7 @@ class InsertTest extends TestCase
 
   public function testInsertWithMissingFields()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com'];
 
@@ -42,7 +42,7 @@ class InsertTest extends TestCase
 
   public function testInsertWithAllFields()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = [
       'nickname' => 'nickname',
@@ -73,7 +73,7 @@ class InsertTest extends TestCase
 
   public function testInsertWithTimestamp()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $date = new Timestamp();
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com', 'created_at' => $date];
@@ -89,7 +89,7 @@ class InsertTest extends TestCase
 
   public function testInsertWithNullValue()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => null, 'password' => 'password'];
 

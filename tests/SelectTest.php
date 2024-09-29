@@ -5,14 +5,14 @@ namespace Tests\Unit;
 use Ilias\Maestro\Database\Expression;
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Select;
-use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Core\Maestro;
 use Maestro\Example\User;
 
 class SelectTest extends TestCase
 {
   public function testSelect()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $select->from(['user' => 'user'], ['nickname', 'email'])->where(['active' => true]);
 
     $expectedSql = "SELECT user.nickname, user.email FROM user WHERE active = :where_active";
@@ -24,7 +24,7 @@ class SelectTest extends TestCase
 
   public function testSelectWithInClause()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $select->from(['user' => 'user'], ['nickname', 'email'])->in(['id' => [1, 2, 3]]);
 
     $expectedSql = "SELECT user.nickname, user.email FROM user WHERE id IN(:in_id_0,:in_id_1,:in_id_2)";
@@ -36,7 +36,7 @@ class SelectTest extends TestCase
 
   public function testSelectWithMultipleConditions()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $select->from(['user' => 'user'], ['nickname', 'email'])->where(['active' => true, 'verified' => true]);
 
     $expectedSql = "SELECT user.nickname, user.email FROM user WHERE active = :where_active AND verified = :where_verified";
@@ -48,7 +48,7 @@ class SelectTest extends TestCase
 
   public function testMultipleInConditions()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $columns = ['nickname', 'email'];
     $conditions = [
@@ -74,7 +74,7 @@ class SelectTest extends TestCase
 
   public function testSelectWithoutConditions()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $select->from(['user' => 'user'], ['nickname', 'email']);
 
     $expectedSql = "SELECT user.nickname, user.email FROM user";
@@ -86,7 +86,7 @@ class SelectTest extends TestCase
 
   public function testSelectWithFunctions()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $columns = ['nickname', 'email', 'count' => new Expression('COUNT(*)')];
     $conditions = ['active' => true];
@@ -102,7 +102,7 @@ class SelectTest extends TestCase
 
   public function testSelectWithJoin()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $columns = ['nickname', 'email'];
     $conditions = ['user.active' => true];
@@ -120,7 +120,7 @@ class SelectTest extends TestCase
 
   public function testSelectWithLeftJoin()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $columns = ['nickname', 'email'];
     $conditions = ['user.active' => true];
@@ -138,7 +138,7 @@ class SelectTest extends TestCase
 
   public function testSelectWithMultipleJoins()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $columns = ['nickname', 'email'];
     $conditions = ['user.active' => true];
@@ -157,7 +157,7 @@ class SelectTest extends TestCase
 
   public function testSelectWithOrderBy()
   {
-    $select = new Select(SqlBehavior::SQL_NO_PREDICT);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $columns = ['nickname', 'email'];
     $conditions = ['active' => true];

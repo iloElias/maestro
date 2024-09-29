@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Core\Maestro;
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Update;
 use Ilias\Maestro\Types\Timestamp;
@@ -12,7 +12,7 @@ class UpdateTest extends TestCase
 {
   public function testUpdate()
   {
-    $update = new Update(SqlBehavior::SQL_NO_PREDICT);
+    $update = new Update(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'updated_nickname'];
     $conditions = ['email' => 'email@example.com'];
@@ -28,7 +28,7 @@ class UpdateTest extends TestCase
 
   public function testUpdateWithInClause()
   {
-    $update = new Update(SqlBehavior::SQL_NO_PREDICT);
+    $update = new Update(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'updated_nickname'];
     $conditions = ['id' => [1, 2, 3]];
@@ -44,7 +44,7 @@ class UpdateTest extends TestCase
 
   public function testUpdateWithMultipleConditions()
   {
-    $update = new Update(SqlBehavior::SQL_NO_PREDICT);
+    $update = new Update(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'updated_nickname'];
     $conditions = ['email' => 'email@example.com', 'active' => true];
@@ -60,7 +60,7 @@ class UpdateTest extends TestCase
 
   public function testMultipleInConditions()
   {
-    $update = new Update(SqlBehavior::SQL_NO_PREDICT);
+    $update = new Update(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'updated_nickname'];
     $conditions = [
@@ -83,7 +83,7 @@ class UpdateTest extends TestCase
 
   public function testUpdateWithoutConditions()
   {
-    $update = new Update(SqlBehavior::SQL_NO_PREDICT);
+    $update = new Update(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'updated_nickname'];
 
@@ -98,7 +98,7 @@ class UpdateTest extends TestCase
 
   public function testUpdateWithTimestamp()
   {
-    $update = new Update(SqlBehavior::SQL_NO_PREDICT);
+    $update = new Update(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $date = new Timestamp();
     $data = ['updated_at' => $date];
@@ -115,7 +115,7 @@ class UpdateTest extends TestCase
 
   public function testUpdateMultipleSetClauses()
   {
-    $update = new Update(SqlBehavior::SQL_NO_PREDICT);
+    $update = new Update(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'updated_nickname', 'active' => false];
     $conditions = ['email' => 'email@example.com'];
