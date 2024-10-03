@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Insert;
-use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Types\Timestamp;
 use Maestro\Example\User;
 
@@ -12,11 +12,11 @@ class InsertTest extends TestCase
 {
   public function testInsert()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com', 'password' => 'password'];
 
-    $insert->into($table::getTableName())->values($data);
+    $insert->into($table::tableName())->values($data);
 
     $expectedSql = "INSERT INTO user (nickname, email, password) VALUES (:nickname, :email, :password)";
     $expectedParams = [':nickname' => 'nickname', ':email' => 'email@example.com', ':password' => 'password'];
@@ -27,11 +27,11 @@ class InsertTest extends TestCase
 
   public function testInsertWithMissingFields()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com'];
 
-    $insert->into($table::getTableName())->values($data);
+    $insert->into($table::tableName())->values($data);
 
     $expectedSql = "INSERT INTO user (nickname, email) VALUES (:nickname, :email)";
     $expectedParams = [':nickname' => 'nickname', ':email' => 'email@example.com'];
@@ -42,7 +42,7 @@ class InsertTest extends TestCase
 
   public function testInsertWithAllFields()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = [
       'nickname' => 'nickname',
@@ -54,7 +54,7 @@ class InsertTest extends TestCase
       'inactivated_in' => null
     ];
 
-    $insert->into($table::getTableName())->values($data);
+    $insert->into($table::tableName())->values($data);
 
     $expectedSql = "INSERT INTO user (nickname, email, password, active, created_in, updated_in, inactivated_in) VALUES (:nickname, :email, :password, :active, :created_in, :updated_in, :inactivated_in)";
     $expectedParams = [
@@ -73,12 +73,12 @@ class InsertTest extends TestCase
 
   public function testInsertWithTimestamp()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $date = new Timestamp();
     $data = ['nickname' => 'nickname', 'email' => 'email@example.com', 'created_at' => $date];
 
-    $insert->into($table::getTableName())->values($data);
+    $insert->into($table::tableName())->values($data);
 
     $expectedSql = "INSERT INTO user (nickname, email, created_at) VALUES (:nickname, :email, :created_at)";
     $expectedParams = [':nickname' => 'nickname', ':email' => 'email@example.com', ':created_at' => $date];
@@ -89,11 +89,11 @@ class InsertTest extends TestCase
 
   public function testInsertWithNullValue()
   {
-    $insert = new Insert(SqlBehavior::SQL_NO_PREDICT);
+    $insert = new Insert(Maestro::SQL_NO_PREDICT);
     $table = User::class;
     $data = ['nickname' => 'nickname', 'email' => null, 'password' => 'password'];
 
-    $insert->into($table::getTableName())->values($data);
+    $insert->into($table::tableName())->values($data);
 
     $expectedSql = "INSERT INTO user (nickname, email, password) VALUES (:nickname, :email, :password)";
     $expectedParams = [':nickname' => 'nickname', ':email' => null, ':password' => 'password'];

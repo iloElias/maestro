@@ -2,8 +2,7 @@
 
 namespace Ilias\Maestro\Abstract;
 
-use Ilias\Maestro\Database\PDOConnection;
-use Ilias\Maestro\Database\SqlBehavior;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException, PDO, Exception, PDOStatement;
 
@@ -11,13 +10,61 @@ abstract class Query
 {
   public mixed $current = null;
   protected array $parameters = [];
+  protected array $where = [];
   private ?PDOStatement $stmt = null;
   private bool $isBinded = false;
 
   public function __construct(
-    protected string $behavior = SqlBehavior::SQL_STRICT,
+    protected string $behavior = Maestro::SQL_STRICT,
     private ?PDO $pdo = null,
   ) {
+  }
+
+  /**
+   * Adds WHERE conditions to the SQL query.
+   * This method accepts an associative array of conditions where the key is the column name and the value is the condition value.
+   *
+   * @param array $conditions An associative array of conditions for the WHERE clause.
+   * @return $this Returns the current instance for method chaining.
+   */
+  public function where(array $conditions)
+  {
+    foreach ($conditions as $column => $value) {
+      $columnWhere = Utils::sanitizeForPostgres($column);
+      $paramName = str_replace('.', '_', ":where_{$columnWhere}");
+      if (is_int($value)) {
+        $this->parameters[$paramName] = $value;
+      } elseif (is_bool($value)) {
+        $this->parameters[$paramName] = $value ? 'true' : 'false';
+      } else {
+        $value = str_replace("'", "''", $value);
+        $this->parameters[$paramName] = "'{$value}'";
+      }
+      $this->where[] = "{$column} = {$paramName}";
+    }
+    return $this;
+  }
+
+  public function in(array $conditions)
+  {
+    foreach ($conditions as $column => $value) {
+      $inParams = array_map(function ($v, $k) use ($column) {
+        $columnIn = Utils::sanitizeForPostgres($column);
+        $paramName = ":in_{$columnIn}_{$k}";
+        if (is_int($v)) {
+          $this->parameters[$paramName] = $v;
+        } elseif (is_bool($v)) {
+          $this->parameters[$paramName] = $v ? 'true' : 'false';
+        } else {
+          $v = str_replace("'", "''", $v);
+          $this->parameters[$paramName] = "'{$v}'";
+        }
+        return $paramName;
+      }, $value, array_keys($value));
+      $inList = implode(",", $inParams);
+      $this->where[] = "{$column} IN({$inList})";
+    }
+    return $this;
   }
 
   abstract public function getSql(): string;
@@ -56,11 +103,11 @@ abstract class Query
     } catch (\Throwable $e) {
       if (!str_contains($table, ".")) {
         switch ($this->behavior) {
-          case SqlBehavior::SQL_STRICT:
+          case Maestro::SQL_STRICT:
             throw new InvalidArgumentException("In strict SQL mode, table names must be provided as schema.table.");
-          case SqlBehavior::SQL_PREDICT:
+          case Maestro::SQL_PREDICT:
             return "public.{$table}";
-          case SqlBehavior::SQL_NO_PREDICT:
+          case Maestro::SQL_NO_PREDICT:
             return $table;
         }
       }

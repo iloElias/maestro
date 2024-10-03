@@ -3,6 +3,7 @@
 namespace Ilias\Maestro\Database;
 
 use Ilias\Maestro\Abstract\Query;
+use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Utils\Utils;
 
 class Select extends Query
@@ -18,12 +19,24 @@ class Select extends Query
   private string $alias;
   private array $columns = [];
   private array $joins = [];
-  private array $where = [];
   private string $group = '';
   private array $having = [];
   private array $order = [];
   private string $offset = '';
   private string $limit = '';
+  private bool $distinct = false;
+
+  /**
+   * Sets the DISTINCT flag for the SELECT statement.
+   *
+   * @param bool $distinct Whether to select distinct rows.
+   * @return Select Returns the current Select instance.
+   */
+  public function distinct(bool $distinct = true): Select
+  {
+    $this->distinct = $distinct;
+    return $this;
+  }
 
   /**
    * Sets the table and columns for the SELECT statement.
@@ -39,7 +52,11 @@ class Select extends Query
     $this->alias = $alias;
 
     foreach ($columns as $rename => $column) {
-      $holder = is_string($column) ? "{$alias}.{$column}" : (string) $column;
+      if ($column instanceof Expression) {
+        $holder = (string) $column;
+      } else {
+        $holder = is_string($column) ? "{$alias}.{$column}" : (string) $column;
+      }
       $this->columns[] = is_int($rename) ? $holder : "{$holder} AS {$rename}";
     }
 
@@ -68,51 +85,6 @@ class Select extends Query
     return $this;
   }
 
-  /**
-   * Adds WHERE conditions to the SQL query.
-   * This method accepts an associative array of conditions where the key is the column name and the value is the condition value.
-   *
-   * @param array $conditions An associative array of conditions for the WHERE clause.
-   * @return $this Returns the current instance for method chaining.
-   */
-  public function where(array $conditions): Select
-  {
-    foreach ($conditions as $column => $value) {
-      $columnWhere = Utils::sanitizeForPostgres($column);
-      $paramName = str_replace('.', '_', ":where_{$columnWhere}");
-      if (is_int($value)) {
-        $this->parameters[$paramName] = $value;
-      } elseif (is_bool($value)) {
-        $this->parameters[$paramName] = $value ? 'true' : 'false';
-      } else {
-        $this->parameters[$paramName] = "'{$value}'";
-      }
-      $this->where[] = "{$column} = {$paramName}";
-    }
-    return $this;
-  }
-
-  public function in(array $conditions): Select
-  {
-    foreach ($conditions as $column => $value) {
-      $inParams = array_map(function ($v, $k) use ($column) {
-        $columnIn = Utils::sanitizeForPostgres($column);
-        $paramName = ":in_{$columnIn}_{$k}";
-        if (is_int($v)) {
-          $this->parameters[$paramName] = $v;
-        } elseif (is_bool($v)) {
-          $this->parameters[$paramName] = $v ? 'true' : 'false';
-        } else {
-          $this->parameters[$paramName] = "'{$v}'";
-        }
-        return $paramName;
-      }, $value, array_keys($value));
-      $inList = implode(",", $inParams);
-      $this->where[] = "{$column} IN({$inList})";
-    }
-    return $this;
-  }
-
   public function group(array $columns): Select
   {
     $this->group = implode(", ", $columns);
@@ -129,6 +101,7 @@ class Select extends Query
       } elseif (is_bool($value)) {
         $this->parameters[$paramName] = $value ? 'true' : 'false';
       } else {
+        $value = str_replace("'", "''", $value);
         $this->parameters[$paramName] = "'{$value}'";
       }
       $this->having[] = "{$column} = {$paramName}";
@@ -150,6 +123,9 @@ class Select extends Query
 
   public function limit(int|string $limit): Select
   {
+    if (is_string($limit) && !is_numeric($limit)) {
+      throw new \InvalidArgumentException("Limit must be a number.");
+    }
     $this->limit = "{$limit}";
     return $this;
   }
@@ -164,10 +140,11 @@ class Select extends Query
     $orderClause = implode(", ", $this->order);
 
     $sql = [];
-    if ($this->behavior === SqlBehavior::SQL_STRICT || !empty($joins)) {
-      $sql[] = "SELECT $columns FROM {$this->from} AS {$this->alias}";
+    $distinct = $this->distinct ? ' DISTINCT' : '';
+    if ($this->behavior === Maestro::SQL_STRICT || !empty($joins)) {
+      $sql[] = "SELECT{$distinct} $columns FROM {$this->from} AS {$this->alias}";
     } else {
-      $sql[] = "SELECT $columns FROM {$this->from}";
+      $sql[] = "SELECT{$distinct} $columns FROM {$this->from}";
     }
     if (!empty($joins)) {
       $sql[] = $joins;

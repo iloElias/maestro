@@ -8,8 +8,11 @@ use Maestro\Example\User;
 
 require_once("./vendor/autoload.php");
 
-$coreDatabase = new Manager();
-$agrofastDB = new MaestroDb();
+// $coreDatabase = new Manager();
+// $agrofastDB = new MaestroDb();
 // new User("nickname", "email", "password", true, new Timestamp());
 
-print implode("\n", $coreDatabase->createDatabase($agrofastDB, false)) . "\n";
+// print implode("\n", $coreDatabase->createDatabase($agrofastDB, false)) . "\n";
+
+var_dump([new stdClass() => "test"]);
+

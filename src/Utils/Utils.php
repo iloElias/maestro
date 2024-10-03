@@ -45,6 +45,8 @@ class Utils
       $sanitized = '_' . $sanitized;
     }
 
+    $sanitized = rtrim($sanitized, '_');
+
     return $sanitized;
   }
 

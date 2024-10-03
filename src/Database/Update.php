@@ -9,7 +9,6 @@ class Update extends Query
 {
   private $table;
   private $set = [];
-  private $where = [];
 
   public function table(string $table): Update
   {
