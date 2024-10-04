@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Maestro\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Database\Insert;

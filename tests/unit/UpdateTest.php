@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Maestro\Tests\Unit;
 
 use Ilias\Maestro\Core\Maestro;
 use PHPUnit\Framework\TestCase;

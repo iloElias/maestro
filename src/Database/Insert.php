@@ -43,6 +43,28 @@ class Insert extends Query
     return $this;
   }
 
+  /**
+   * @deprecated This method does not make anything when used. Since you're building a insert query
+   *
+   * @param array $conditions An associative array of conditions for the WHERE clause.
+   * @return Insert Returns the current Insert instance.
+   */
+  public function where(array $conditions): static
+  {
+    return $this;
+  }
+
+  /**
+   * @deprecated This method does not make anything when used. Since you're building a insert query
+   *
+   * @param array $conditions An associative array of conditions for the WHERE clause.
+   * @return Insert Returns the current Insert instance.
+   */
+  public function in(array $conditions): static
+  {
+    return $this;
+  }
+
   public function returning(array $columns): Insert
   {
     foreach ($columns as $column) {

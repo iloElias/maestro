@@ -54,6 +54,8 @@ class Select extends Query
     foreach ($columns as $rename => $column) {
       if ($column instanceof Expression) {
         $holder = (string) $column;
+      } elseif (is_subclass_of($column, Query::class)) {
+        $holder = "({$column})";
       } else {
         $holder = is_string($column) ? "{$alias}.{$column}" : (string) $column;
       }
@@ -96,14 +98,7 @@ class Select extends Query
     foreach ($conditions as $column => $value) {
       $columnHaving = Utils::sanitizeForPostgres($column);
       $paramName = ":having_{$columnHaving}";
-      if (is_int($value)) {
-        $this->parameters[$paramName] = $value;
-      } elseif (is_bool($value)) {
-        $this->parameters[$paramName] = $value ? 'true' : 'false';
-      } else {
-        $value = str_replace("'", "''", $value);
-        $this->parameters[$paramName] = "'{$value}'";
-      }
+      $this->storeParameter($paramName, $value);
       $this->having[] = "{$column} = {$paramName}";
     }
     return $this;
@@ -141,7 +136,7 @@ class Select extends Query
 
     $sql = [];
     $distinct = $this->distinct ? ' DISTINCT' : '';
-    if ($this->behavior === Maestro::SQL_STRICT || !empty($joins)) {
+    if (in_array($this->behavior, [Maestro::SQL_STRICT, Maestro::SQL_PREDICT]) || !empty($joins)) {
       $sql[] = "SELECT{$distinct} $columns FROM {$this->from} AS {$this->alias}";
     } else {
       $sql[] = "SELECT{$distinct} $columns FROM {$this->from}";

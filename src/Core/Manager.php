@@ -59,7 +59,7 @@ class Manager
       $constraintsSql = array_merge($constraintsSql, ...$constraints);
     }
 
-    $sql = array_merge($schemasSql, $tablesSql, $constraintsSql, $functionsSql);
+    $sql = array_merge($functionsSql, $schemasSql, $tablesSql, $constraintsSql);
     if ($executeOnComplete) {
       foreach ($sql as $query) {
         $this->executeQuery($this->pdo, $query);

@@ -3,6 +3,8 @@
 namespace Ilias\Maestro\Abstract;
 
 use Ilias\Maestro\Core\Maestro;
+use Ilias\Maestro\Database\Expression;
+use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException, PDO, Exception, PDOStatement;
 
@@ -27,44 +29,46 @@ abstract class Query
    * @param array $conditions An associative array of conditions for the WHERE clause.
    * @return $this Returns the current instance for method chaining.
    */
-  public function where(array $conditions)
+  public function where(array $conditions): static
   {
     foreach ($conditions as $column => $value) {
       $columnWhere = Utils::sanitizeForPostgres($column);
       $paramName = str_replace('.', '_', ":where_{$columnWhere}");
-      if (is_int($value)) {
-        $this->parameters[$paramName] = $value;
-      } elseif (is_bool($value)) {
-        $this->parameters[$paramName] = $value ? 'true' : 'false';
-      } else {
-        $value = str_replace("'", "''", $value);
-        $this->parameters[$paramName] = "'{$value}'";
-      }
+      $this->storeParameter($paramName, $value);
       $this->where[] = "{$column} = {$paramName}";
     }
     return $this;
   }
 
-  public function in(array $conditions)
+  public function in(array $conditions): static
   {
     foreach ($conditions as $column => $value) {
       $inParams = array_map(function ($v, $k) use ($column) {
         $columnIn = Utils::sanitizeForPostgres($column);
         $paramName = ":in_{$columnIn}_{$k}";
-        if (is_int($v)) {
-          $this->parameters[$paramName] = $v;
-        } elseif (is_bool($v)) {
-          $this->parameters[$paramName] = $v ? 'true' : 'false';
-        } else {
-          $v = str_replace("'", "''", $v);
-          $this->parameters[$paramName] = "'{$v}'";
-        }
+        $this->storeParameter($paramName, $v);
         return $paramName;
       }, $value, array_keys($value));
       $inList = implode(",", $inParams);
       $this->where[] = "{$column} IN({$inList})";
     }
     return $this;
+  }
+
+  protected function storeParameter(string $name, mixed $value): void
+  {
+    if (is_int($value)) {
+      $this->parameters[$name] = $value;
+    } elseif (is_bool($value)) {
+      $this->parameters[$name] = $value ? 'true' : 'false';
+    } elseif (is_object($value) && is_subclass_of($value, Query::class)) {
+      $this->parameters[$name] = "({$value})";
+    } elseif (is_object($value) && $value instanceof Expression) {
+      $this->parameters[$name] = "{$value}";
+    } else {
+      $value = str_replace("'", "''", $value);
+      $this->parameters[$name] = "'{$value}'";
+    }
   }
 
   abstract public function getSql(): string;

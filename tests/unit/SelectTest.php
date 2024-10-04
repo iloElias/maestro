@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Maestro\Tests\Unit;
 
 use Ilias\Maestro\Database\Expression;
 use PHPUnit\Framework\TestCase;
@@ -370,7 +370,7 @@ class SelectTest extends TestCase
       ->where(['user.nickname' => "'; DROP TABLE users; --"]);
 
     $expectedSql = "SELECT user.nickname, user.email FROM user WHERE user.nickname = :where_user_nickname";
-    $expectedParams = [':where_user_nickname' => "'; DROP TABLE users; --"];
+    $expectedParams = [':where_user_nickname' => "'''; DROP TABLE users; --'"];
 
     $this->assertEquals($expectedSql, $select->getSql());
     $this->assertEquals($expectedParams, $select->getParameters());
@@ -406,14 +406,80 @@ class SelectTest extends TestCase
   public function testSelectWithAliases()
   {
     $select = new Select(Maestro::SQL_NO_PREDICT);
-    $select->from(['u' => 'user'], ['u.nickname', 'u.email'])
-      ->join(['p' => 'profile'], 'u.id = p.user_id', ['p.bio'])
+    $select->from(['u' => 'user'], ['nickname', 'email'])
+      ->join(['p' => 'profile'], 'u.id = p.user_id', ['bio'])
       ->where(['u.active' => true]);
 
-    $expectedSql = "SELECT u.nickname, u.email, p.bio FROM user AS u JOIN profile AS p ON u.id = p.user_id WHERE u.active = :where_u_active";
+    $expectedSql = "SELECT u.nickname, u.email, p.bio FROM user AS u INNER JOIN profile AS p ON u.id = p.user_id WHERE u.active = :where_u_active";
     $expectedParams = [':where_u_active' => true];
 
     $this->assertEquals($expectedSql, $select->getSql());
     $this->assertEquals($expectedParams, $select->getParameters());
+  }
+
+  public function testSelectWithSubselect()
+  {
+    $subselect = new Select(Maestro::SQL_NO_PREDICT);
+    $subselect->from(['p' => 'profile'], ['user_id'])
+      ->where(['p.active' => true]);
+
+    $select = new Select(Maestro::SQL_NO_PREDICT);
+    $select->from(['u' => 'user'], ['nickname', 'email'])
+      ->where(['u.id' => $subselect]);
+
+    $expectedSql = "SELECT u.nickname, u.email FROM user WHERE u.id = (SELECT p.user_id FROM profile WHERE p.active = true)";
+
+    $this->assertEquals($expectedSql, (string)$select);
+  }
+
+  public function testSelectWithSubselectInJoin()
+  {
+    $subselect = new Select(Maestro::SQL_NO_PREDICT);
+    $subselect->from(['p' => 'profile'], ['user_id'])
+      ->where(['p.active' => true]);
+
+    $select = new Select(Maestro::SQL_NO_PREDICT);
+    $select->from(['u' => 'user'], ['nickname', 'email'])
+      ->join(['sub' => $subselect], 'u.id = sub.user_id', ['user_id'])
+      ->where(['u.active' => true]);
+
+    $expectedSql = "SELECT u.nickname, u.email, sub.user_id FROM user AS u INNER JOIN (SELECT p.user_id FROM profile WHERE p.active = true) AS sub ON u.id = sub.user_id WHERE u.active = :where_u_active";
+    $expectedParams = [':where_u_active' => 'true'];
+
+    $this->assertEquals($expectedSql, $select->getSql());
+    $this->assertEquals($expectedParams, $select->getParameters());
+  }
+
+  public function testSelectWithSubselectInColumns()
+  {
+    $subselect = new Select(Maestro::SQL_NO_PREDICT);
+    $subselect->from(['p' => 'profile'], [new Expression('COUNT(*)')])
+      ->where(['p.user_id' => new Expression('u.id')]);
+
+    $select = new Select(Maestro::SQL_NO_PREDICT);
+    $select->from(['u' => 'user'], ['nickname', 'email', 'profile_count' => $subselect])
+      ->where(['u.active' => true]);
+
+    $expectedSql = "SELECT u.nickname, u.email, (SELECT COUNT(*) FROM profile WHERE p.user_id = u.id) AS profile_count FROM user WHERE u.active = :where_u_active";
+    $expectedParams = [':where_u_active' => true];
+
+    $this->assertEquals($expectedSql, $select->getSql());
+    $this->assertEquals($expectedParams, $select->getParameters());
+  }
+
+  public function testSelectWithSubselectInHaving()
+  {
+    $subselect = new Select(Maestro::SQL_NO_PREDICT);
+    $subselect->from(['p' => 'profile'], [new Expression('COUNT(*)')])
+      ->where(['p.user_id' => new Expression('u.id')]);
+
+    $select = new Select(Maestro::SQL_NO_PREDICT);
+    $select->from(['u' => 'user'], ['nickname', 'email'])
+      ->group(['u.nickname'])
+      ->having(['profile_count' => $subselect]);
+
+    $expectedSql = "SELECT u.nickname, u.email FROM user GROUP BY u.nickname HAVING profile_count = (SELECT COUNT(*) FROM profile WHERE p.user_id = u.id)";
+
+    $this->assertEquals($expectedSql, (string)$select);
   }
 }
