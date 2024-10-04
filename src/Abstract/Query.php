@@ -82,7 +82,9 @@ abstract class Query
   {
     foreach ($table as $key => $value) {
       if (is_int($key)) {
-        throw new InvalidArgumentException("Table alias cannot be a number.");
+        $name = $this->validateTableName($value);
+        $name = Utils::toSnakeCase($name);
+        return [$name, $name];
       }
       $alias = Utils::toSnakeCase($key);
       if (is_string($value)) {

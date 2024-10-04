@@ -16,7 +16,7 @@ class Select extends Query
   const ORDER_DESC = 'DESC';
 
   private string $from;
-  private string $alias;
+  private ?string $alias;
   private array $columns = [];
   private array $joins = [];
   private string $group = '';
