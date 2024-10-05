@@ -18,6 +18,15 @@ abstract class Query
   protected string $query = ''; 
   public const AND = 'AND';
   public const OR = 'OR';
+  public const EQUALS = '=';
+  public const NOT_EQUAL = '!=';
+  public const GREATER_THAN = '>';
+  public const LESS_THAN = '<';
+  public const GREATER_THAN_OR_EQUAL = '>=';
+  public const LESS_THAN_OR_EQUAL = '<=';
+  public const LIKE = '*~';
+  public const NOT_LIKE = '!~';
+  public const NOT_LIKE_OR_EQUAL = '<>';
 
   public function __construct(
     protected string $behavior = Maestro::SQL_STRICT,
@@ -32,35 +41,45 @@ abstract class Query
    * @param array $conditions An associative array of conditions for the WHERE clause.
    * @return $this Returns the current instance for method chaining.
    */
-  public function where(array $conditions, string $operation = Select::AND, bool $group = false): static
+  public function where(string|array $conditions, string $operation = Select::AND, string $compaction = Select::EQUALS, bool $group = false): static
   {
-    $where = [];
-    foreach ($conditions as $column => $value) {
-      $columnWhere = Utils::sanitizeForPostgres($column);
-      $paramName = str_replace('.', '_', ":where_{$columnWhere}");
-      $this->storeParameter($paramName, $value);
-      $where[] = "{$column} = {$paramName}";
+    if (is_array($conditions)) {
+      $where = [];
+      foreach ($conditions as $column => $value) {
+        $columnWhere = Utils::sanitizeForPostgres($column);
+        $paramName = str_replace('.', '_', ":where_{$columnWhere}");
+        $this->storeParameter($paramName, $value);
+        $where[] = "{$column} {$compaction} {$paramName}";
+      }
+      $clauses = implode(" {$operation} ", $where);
+      $this->where[] = ($group ? "({$clauses})" : $clauses);
     }
-    $clauses = implode(" {$operation} ", $where);
-    $this->where[] = ($group ? "({$clauses})" : $clauses);
+    if (is_string($conditions)) {
+      $this->where[] = $conditions;
+    }
     return $this;
   }
 
-  public function in(array $conditions, string $operation = Select::AND, bool $group = false): static
+  public function in(string|array $conditions, string $operation = Select::AND, bool $group = false): static
   {
-    $where = [];
-    foreach ($conditions as $column => $value) {
-      $inParams = array_map(function ($v, $k) use ($column) {
-        $columnIn = Utils::sanitizeForPostgres($column);
-        $paramName = ":in_{$columnIn}_{$k}";
-        $this->storeParameter($paramName, $v);
-        return $paramName;
-      }, $value, array_keys($value));
-      $inList = implode(",", $inParams);
-      $where[] = "{$column} IN({$inList})";
+    if (is_array($conditions)) {
+      $where = [];
+      foreach ($conditions as $column => $value) {
+        $inParams = array_map(function ($v, $k) use ($column) {
+          $columnIn = Utils::sanitizeForPostgres($column);
+          $paramName = ":in_{$columnIn}_{$k}";
+          $this->storeParameter($paramName, $v);
+          return $paramName;
+        }, $value, array_keys($value));
+        $inList = implode(",", $inParams);
+        $where[] = "{$column} IN({$inList})";
+      }
+      $clauses = implode(" {$operation} ", $where);
+      $this->where[] = ($group ? "({$clauses})" : $clauses);  
     }
-    $clauses = implode(" {$operation} ", $where);
-    $this->where[] = ($group ? "({$clauses})" : $clauses);
+    if (is_string($conditions)) {
+      $this->where[] = $conditions;
+    }
     return $this;
   }
 
