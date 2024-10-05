@@ -32,6 +32,8 @@ final class User extends Table
 
   public function __construct(
     string $nickname,
+    string $firstName,
+    string $lastName,
     string $email,
     string $password,
     bool $active,
@@ -39,6 +41,8 @@ final class User extends Table
   ) {
     $this->nickname = $nickname;
     $this->email = $email;
+    $this->firstName = $firstName;
+    $this->lastName = $lastName;
     $this->password = $password;
     $this->active = $active;
     $this->createdIn = $createdIn;

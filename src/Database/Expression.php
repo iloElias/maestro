@@ -16,6 +16,10 @@ class Expression
   public const LOCALTIMESTAMP = 'LOCALTIMESTAMP';
   public const RANDOM_UUID = 'gen_random_uuid()';
 
+  public const DEFAULT_REPLACE_EXPRESSIONS = [
+    self::RANDOM_UUID,
+  ];
+
   public function __construct(
     private string $expression,
   ) {

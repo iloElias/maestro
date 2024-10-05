@@ -1,4 +1,5 @@
-## Maestro Documentation
+# Maestro Documentation
+
 [![Maintainer](http://img.shields.io/badge/maintainer-@iloElias-blue.svg)](https://github.com/iloElias)
 [![Maintainer](http://img.shields.io/badge/maintainer-@dhenriquearantes-blue.svg)](https://github.com/dhenriquearantes)
 [![Package](https://img.shields.io/badge/package-iloelias/maestro-orange.svg)](https://packagist.org/packages/ilias/maestro)
@@ -7,7 +8,7 @@
 
 Maestro is a PHP library designed to facilitate the creation and management of PostgreSQL database schemas and tables. It allows developers to define schemas and tables using PHP classes, providing a clear and structured way to manage database definitions and relationships.
 
-### Table of Contents
+## Table of Contents
 
 - [Introduction](#introduction)
 - [Installation](#installation)
@@ -30,7 +31,7 @@ Maestro is a PHP library designed to facilitate the creation and management of P
   - [Defining a Schema and Tables](#defining-a-schema-and-tables)
   - [Generating SQL Queries](#generating-sql-queries)
 
-### Installation
+## Installation
 
 To install Maestro, use Composer:
 
@@ -38,50 +39,50 @@ To install Maestro, use Composer:
 composer require ilias/maestro
 ```
 
-### Schema and Table Classes
+## Schema and Table Classes
 
 Maestro uses abstract classes for schemas and tables. Developers extend these classes to define their own schemas and tables.
 
-### Defining Schemas and Tables
+## Defining Schemas and Tables
 
-#### Schema Class
+### Schema Class
 
 A schema class extends the `Schema` abstract class. It contains table attributes that are typed with the table classes.
 
-#### Table Class
+### Table Class
 
 A table class extends the `Table` abstract class. It can define columns as class properties, specifying their types and optional default values.
 
-#### Unique Columns
+### Unique Columns
 
 You can specify columns that should be unique by overriding the `tableUniqueColumns` method in your table class.
 You can also define a column as unique by adding the `@unique` clause to the documentation of the attribute you want to make unique. This format will not work if the `tableUniqueColumns` method is overridden.
 
-#### Default Values
+### Default Values
 
 Columns can have default values. If a default value is a PostgreSQL function, it should be defined as a `PostgresFunction` type to ensure it is not quoted in the final SQL query.
 
-### DatabaseManager
+## DatabaseManager
 
 The `DatabaseManager` class provides methods to create schemas, tables, and manage foreign key constraints.
 
-#### Creating Schemas and Tables
+### Creating Schemas and Tables
 
 The `createSchema` and `createTable` methods generate SQL queries to create schemas and tables. The `createTablesForSchema` method handles the creation of all tables within a schema and their foreign key constraints.
 
-#### Foreign Key Constraints
+### Foreign Key Constraints
 
 Foreign key constraints are added using `ALTER TABLE` statements after the tables are created.
 
-#### Executing Queries
+### Executing Queries
 
 The `executeQuery` method executes the generated SQL queries using a PDO instance.
 
-### Query Builders
+## Query Builders
 
 Maestro provides query builder classes for common SQL operations: `Select`, `Insert`, `Update`, and `Delete`.
 
-#### Select
+### Select
 
 The `Select` class allows you to build and execute SELECT queries.
 
@@ -99,7 +100,7 @@ $sql = $select->getSql();
 $params = $select->getParameters();
 ```
 
-#### Insert
+### Insert
 
 The `Insert` class allows you to build and execute INSERT queries.
 
@@ -119,7 +120,7 @@ $sql = $insert->getSql();
 $params = $insert->getParameters();
 ```
 
-#### Update
+### Update
 
 The `Update` class allows you to build and execute UPDATE queries.
 
@@ -136,7 +137,7 @@ $sql = $update->getSql();
 $params = $update->getParameters();
 ```
 
-#### Delete
+### Delete
 
 The `Delete` class allows you to build and execute DELETE queries.
 

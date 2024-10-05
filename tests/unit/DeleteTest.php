@@ -49,7 +49,7 @@ class DeleteTest extends TestCase
     $delete->from($table::tableName())->where($conditions);
 
     $expectedSql = "DELETE FROM user WHERE email = :where_email AND active = :where_active";
-    $expectedParams = [':where_email' => "'email@example.com'", ':where_active' => 'false'];
+    $expectedParams = [':where_email' => "'email@example.com'", ':where_active' => 'FALSE'];
 
     $this->assertEquals($expectedSql, $delete->getSql());
     $this->assertEquals($expectedParams, $delete->getParameters());

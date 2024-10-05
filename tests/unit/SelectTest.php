@@ -113,7 +113,7 @@ class SelectTest extends TestCase
       ->where($conditions);
 
     $expectedSql = "SELECT user.nickname, user.email, profile.bio FROM user AS user INNER JOIN profile AS profile ON user.id = profile.user_id WHERE user.active = :where_user_active";
-    $expectedParams = [':where_user_active' => 'true'];
+    $expectedParams = [':where_user_active' => 'TRUE'];
 
     $this->assertEquals($expectedSql, $select->getSql());
     $this->assertEquals($expectedParams, $select->getParameters());
@@ -302,7 +302,7 @@ class SelectTest extends TestCase
       ->where(['active' => true, 'age' => 30, 'name' => 'John']);
 
     $expectedSql = "SELECT user.nickname, user.email FROM user WHERE active = :where_active AND age = :where_age AND name = :where_name";
-    $expectedParams = [':where_active' => 'true', ':where_age' => 30, ':where_name' => "'John'"];
+    $expectedParams = [':where_active' => 'TRUE', ':where_age' => 30, ':where_name' => "'John'"];
 
     $this->assertEquals($expectedSql, $select->getSql());
     $this->assertEquals($expectedParams, $select->getParameters());
@@ -427,7 +427,7 @@ class SelectTest extends TestCase
     $select->from(['u' => 'user'], ['nickname', 'email'])
       ->where(['u.id' => $subselect]);
 
-    $expectedSql = "SELECT u.nickname, u.email FROM user WHERE u.id = (SELECT p.user_id FROM profile WHERE p.active = true)";
+    $expectedSql = "SELECT u.nickname, u.email FROM user WHERE u.id = (SELECT p.user_id FROM profile WHERE p.active = TRUE)";
 
     $this->assertEquals($expectedSql, (string)$select);
   }
@@ -443,10 +443,10 @@ class SelectTest extends TestCase
       ->join(['sub' => $subselect], 'u.id = sub.user_id', ['user_id'])
       ->where(['u.active' => true]);
 
-    $expectedSql = "SELECT u.nickname, u.email, sub.user_id FROM user AS u INNER JOIN (SELECT p.user_id FROM profile WHERE p.active = true) AS sub ON u.id = sub.user_id WHERE u.active = :where_u_active";
-    $expectedParams = [':where_u_active' => 'true'];
+    $expectedSql = "SELECT u.nickname, u.email, sub.user_id FROM user AS u INNER JOIN (SELECT p.user_id FROM profile WHERE p.active = TRUE) AS sub ON u.id = sub.user_id WHERE u.active = TRUE";
+    $expectedParams = [':where_u_active' => 'TRUE'];
 
-    $this->assertEquals($expectedSql, $select->getSql());
+    $this->assertEquals($expectedSql, (string)$select);
     $this->assertEquals($expectedParams, $select->getParameters());
   }
 

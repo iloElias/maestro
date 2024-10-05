@@ -24,21 +24,14 @@ class Insert extends Query
     $column = Utils::sanitizeForPostgres($column);
     $this->columns[] = $column;
     $paramName = ":$column";
+    $this->storeParameter($paramName, $value);
     $this->values[] = $paramName;
-    $this->parameters[$paramName] = $value;
   }
 
   public function values(Table|array $data): Insert
   {
-    if (is_object($data)) {
-      foreach ((array)$data as $column => $value) {
-        $this->registerValue($column, $value);
-      }
-    }
-    if (is_array($data)) {
-      foreach ($data as $column => $value) {
-        $this->registerValue($column, $value);
-      }
+    foreach ((array) $data as $column => $value) {
+      $this->registerValue($column, $value);
     }
     return $this;
   }

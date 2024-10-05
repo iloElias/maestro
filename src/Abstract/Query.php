@@ -15,6 +15,7 @@ abstract class Query
   protected array $where = [];
   private ?PDOStatement $stmt = null;
   private bool $isBinded = false;
+  protected string $query = ''; 
 
   public function __construct(
     protected string $behavior = Maestro::SQL_STRICT,
@@ -57,10 +58,16 @@ abstract class Query
 
   protected function storeParameter(string $name, mixed $value): void
   {
-    if (is_int($value)) {
+    if (!is_bool($value) && in_array($value, Expression::DEFAULT_REPLACE_EXPRESSIONS)) {
+      $this->parameters[$name] = Expression::DEFAULT;
+      return;
+    }
+    if (is_null($value)) {
+      $this->parameters[$name] = Expression::NULL;
+    } elseif (is_int($value)) {
       $this->parameters[$name] = $value;
     } elseif (is_bool($value)) {
-      $this->parameters[$name] = $value ? 'true' : 'false';
+      $this->parameters[$name] = $value ? Expression::TRUE : Expression::FALSE;
     } elseif (is_object($value) && is_subclass_of($value, Query::class)) {
       $this->parameters[$name] = "({$value})";
     } elseif (is_object($value) && $value instanceof Expression) {
@@ -123,37 +130,19 @@ abstract class Query
 
   public function bindParameters(?PDO $pdo = null): Query
   {
-    if (!empty($this->pdo) || !empty($pdo)) {
-      if (!$this->isBinded) {
-        $stmt = $this->pdo->prepare($this->getSql());
-        foreach ($this->parameters as $key => $value) {
-          if (is_null($value)) {
-            $stmt->bindValue($key, $value, PDO::PARAM_NULL);
-          } elseif (is_bool($value)) {
-            $stmt->bindValue($key, $value, PDO::PARAM_BOOL);
-          } elseif (is_int($value)) {
-            $stmt->bindValue($key, $value, PDO::PARAM_INT);
-          } elseif (is_string($value) || $value instanceof \DateTime) {
-            $stmt->bindValue($key, (string) $value, PDO::PARAM_STR);
-          } else {
-            throw new InvalidArgumentException("Unsupported parameter type: " . gettype($value));
-          }
-        }
-        $this->isBinded = true;
-        $this->stmt = $stmt;
-      }
-      return $this;
-    }
-    throw new Exception("No PDO connection provided.");
-  }
-
-  public function forceBindeParameters(): string
-  {
     $query = $this->getSql();
     foreach ($this->parameters as $key => $value) {
       $query = str_replace($key, $value, $query);
     }
-    return $query;
+    $this->query = $query;
+    if (!empty($this->pdo) || !empty($pdo)) {
+      if (!$this->isBinded) {
+        $stmt = $this->pdo->prepare($query);
+        $this->isBinded = true;
+        $this->stmt = $stmt;
+      }
+    }
+    return $this;
   }
 
   public function execute(): array
@@ -170,6 +159,6 @@ abstract class Query
 
   public function __toString(): string
   {
-    return $this->forceBindeParameters();
+    return $this->bindParameters()->query;
   }
 }
