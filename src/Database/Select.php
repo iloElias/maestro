@@ -12,8 +12,8 @@ class Select extends Query
   const INNER = 'INNER';
   const LEFT = 'LEFT';
   const RIGHT = 'RIGHT';
-  const ORDER_ASC = 'ASC';
-  const ORDER_DESC = 'DESC';
+  const ASC = 'ASC';
+  const DESC = 'DESC';
 
   private string $from;
   private ?string $alias;
@@ -93,18 +93,21 @@ class Select extends Query
     return $this;
   }
 
-  public function having(array $conditions): Select
+  public function having(array $conditions, string $operation = Select::AND, $group = false): Select
   {
+    $having = [];
     foreach ($conditions as $column => $value) {
       $columnHaving = Utils::sanitizeForPostgres($column);
       $paramName = ":having_{$columnHaving}";
       $this->storeParameter($paramName, $value);
-      $this->having[] = "{$column} = {$paramName}";
+      $having[] = "{$column} = {$paramName}";
     }
+    $clauses = implode(" {$operation} ", $having);
+    $this->having[] = ($group ? "({$clauses})" : $clauses);
     return $this;
   }
 
-  public function order(string $column, string $direction = 'ASC'): Select
+  public function order(string $column, string $direction = Select::ASC): Select
   {
     $this->order[] = "{$column} {$direction}";
     return $this;

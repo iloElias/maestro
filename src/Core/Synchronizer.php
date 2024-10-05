@@ -14,7 +14,7 @@ class Synchronizer
   public function __construct()
   {
     $this->manager = new Manager();
-    $this->pdo = PDOConnection::getInstance();
+    $this->pdo = PDOConnection::get();
   }
 
   public function synchronize(Database $ormDb): void

@@ -42,7 +42,7 @@ class Insert extends Query
    * @param array $conditions An associative array of conditions for the WHERE clause.
    * @return Insert Returns the current Insert instance.
    */
-  public function where(array $conditions): static
+  public function where(array $conditions, string $operation = \Ilias\Maestro\Database\Select::AND, bool $group = false): static
   {
     return $this;
   }
@@ -53,7 +53,7 @@ class Insert extends Query
    * @param array $conditions An associative array of conditions for the WHERE clause.
    * @return Insert Returns the current Insert instance.
    */
-  public function in(array $conditions): static
+  public function in(array $conditions, string $operation = \Ilias\Maestro\Database\Select::AND, bool $group = false): static
   {
     return $this;
   }

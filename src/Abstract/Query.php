@@ -16,6 +16,8 @@ abstract class Query
   private ?PDOStatement $stmt = null;
   private bool $isBinded = false;
   protected string $query = ''; 
+  public const AND = 'AND';
+  public const OR = 'OR';
 
   public function __construct(
     protected string $behavior = Maestro::SQL_STRICT,
@@ -30,19 +32,23 @@ abstract class Query
    * @param array $conditions An associative array of conditions for the WHERE clause.
    * @return $this Returns the current instance for method chaining.
    */
-  public function where(array $conditions): static
+  public function where(array $conditions, string $operation = Select::AND, bool $group = false): static
   {
+    $where = [];
     foreach ($conditions as $column => $value) {
       $columnWhere = Utils::sanitizeForPostgres($column);
       $paramName = str_replace('.', '_', ":where_{$columnWhere}");
       $this->storeParameter($paramName, $value);
-      $this->where[] = "{$column} = {$paramName}";
+      $where[] = "{$column} = {$paramName}";
     }
+    $clauses = implode(" {$operation} ", $where);
+    $this->where[] = ($group ? "({$clauses})" : $clauses);
     return $this;
   }
 
-  public function in(array $conditions): static
+  public function in(array $conditions, string $operation = Select::AND, bool $group = false): static
   {
+    $where = [];
     foreach ($conditions as $column => $value) {
       $inParams = array_map(function ($v, $k) use ($column) {
         $columnIn = Utils::sanitizeForPostgres($column);
@@ -51,8 +57,10 @@ abstract class Query
         return $paramName;
       }, $value, array_keys($value));
       $inList = implode(",", $inParams);
-      $this->where[] = "{$column} IN({$inList})";
+      $where[] = "{$column} IN({$inList})";
     }
+    $clauses = implode(" {$operation} ", $where);
+    $this->where[] = ($group ? "({$clauses})" : $clauses);
     return $this;
   }
 

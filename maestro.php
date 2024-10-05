@@ -20,11 +20,11 @@ $agrofastDB = new MaestroDb();
 
 // print implode("\n", $coreDatabase->createDatabase($agrofastDB, true)) . "\n";
 
-$insert = new Insert(Maestro::SQL_NO_PREDICT, PDOConnection::getInstance());
+$insert = new Insert(Maestro::SQL_NO_PREDICT, PDOConnection::get());
 $user = new User("nickname'-- drop table", 'John', 'Doe', 'email@example.com', 'password', true, new Timestamp());
 $result = $insert->into($user)->values($user)->returning(['id'])->execute();
 var_dump($result);
 
-$delete = new Delete(Maestro::SQL_NO_PREDICT, PDOConnection::getInstance());
+$delete = new Delete(Maestro::SQL_NO_PREDICT, PDOConnection::get());
 $delete->from($user)->where(['id' => $result[0]['id']])->execute();
 

@@ -15,7 +15,7 @@ class ManagerTest extends TestCase
   protected function setUp(): void
   {
     $this->pdoMock = $this->createMock(\PDO::class);
-    PDOConnection::getInstance($this->pdoMock);
+    PDOConnection::get(pdoMock: $this->pdoMock);
     $this->manager = new Manager();
   }
 

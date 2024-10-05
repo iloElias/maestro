@@ -16,12 +16,22 @@ class Update extends Query
     return $this;
   }
 
-  public function set(string $column, $value): Update
+  public function set(string|array $column, $value = null): Update
   {
-    $column = Utils::sanitizeForPostgres($column);
-    $paramName = ":$column";
-    $this->set[$column] = $paramName;
-    $this->parameters[$paramName] = $value;
+    if (is_array($column)) {
+      foreach ($column as $col => $val) {
+        $this->set($col, $val);
+      }
+    }
+    if (is_string($column)) {
+      if (is_int($column) || is_numeric($column)) {
+        throw new \InvalidArgumentException("Column name must be a string");
+      }
+      $column = Utils::sanitizeForPostgres($column);
+      $paramName = ":$column";
+      $this->set[$column] = $paramName;
+      $this->parameters[$paramName] = $value;
+    }
     return $this;
   }
 

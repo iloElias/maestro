@@ -34,7 +34,7 @@ class Manager
   public function __construct(
     private string $strictType = Maestro::SQL_STRICT
   ) {
-    $this->pdo = PDOConnection::getInstance();
+    $this->pdo = PDOConnection::get();
   }
 
   /**

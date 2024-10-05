@@ -90,7 +90,7 @@ The `Select` class allows you to build and execute SELECT queries.
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Database\PDOConnection;
 
-$select = new Select(PDOConnection::getInstance());
+$select = new Select(PDOConnection::get());
 $select->from(['u' => 'users'], ['u.id', 'u.name'])
        ->where(['u.active' => true])
        ->order('u.name', 'ASC')
@@ -111,7 +111,7 @@ use Maestro\Example\User;
 
 $user = new User('John Doe', 'john@example.com', md5('password'), true, new Timestamp('now'));
 
-$insert = new Insert(PDOConnection::getInstance());
+$insert = new Insert(PDOConnection::get());
 $insert->into(User::class)
        ->values($user)
        ->returning(['id']);
@@ -128,7 +128,7 @@ The `Update` class allows you to build and execute UPDATE queries.
 use Ilias\Maestro\Database\Update;
 use Ilias\Maestro\Database\PDOConnection;
 
-$update = new Update(PDOConnection::getInstance());
+$update = new Update(PDOConnection::get());
 $update->table('users')
        ->set('name', 'Jane Doe')
        ->where(['id' => 1]);
@@ -145,7 +145,7 @@ The `Delete` class allows you to build and execute DELETE queries.
 use Ilias\Maestro\Database\Delete;
 use Ilias\Maestro\Database\PDOConnection;
 
-$delete = new Delete(PDOConnection::getInstance());
+$delete = new Delete(PDOConnection::get());
 $delete->from('users')
        ->where(['id' => 1]);
 
@@ -241,7 +241,7 @@ use Maestro\Example\Hr;
 use PDO;
 
 // Initialize PDO with environment variables
-$pdo = PDOConnection::getInstance();
+$pdo = PDOConnection::get();
 
 // Initialize DatabaseManager
 $dbManager = new DatabaseManager($pdo);

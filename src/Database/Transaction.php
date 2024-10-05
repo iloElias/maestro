@@ -12,7 +12,7 @@ class Transaction
   public function __construct(?PDO $pdo = null)
   {
     if (empty($pdo)) {
-      $pdo = PDOConnection::getInstance();
+      $pdo = PDOConnection::get();
     }
     $this->pdo = $pdo;
   }
