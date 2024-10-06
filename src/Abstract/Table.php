@@ -149,8 +149,7 @@ abstract class Table extends \stdClass
 
   /**
    * Fetches all rows from the table based on the given prediction, order, and limit.
-   *
-   * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
+ @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
    * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
    * @param int|string $limit The limit for the number of rows to fetch. Default is 100.
    * @return array The fetched rows as an array.
@@ -183,8 +182,7 @@ abstract class Table extends \stdClass
 
   /**
    * Fetches a single row from the table based on the given prediction and order.
-   *
-   * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
+ @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
    * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
    * @return mixed The fetched row or null if no row is found.
    */

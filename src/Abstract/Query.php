@@ -7,6 +7,7 @@ use Ilias\Maestro\Database\Expression;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException, PDO, Exception, PDOStatement;
+use function PHPUnit\Framework\isEmpty;
 
 abstract class Query
 {
@@ -15,7 +16,7 @@ abstract class Query
   protected array $where = [];
   private ?PDOStatement $stmt = null;
   private bool $isBinded = false;
-  protected string $query = ''; 
+  protected string $query = '';
   public const AND = 'AND';
   public const OR = 'OR';
   public const EQUALS = '=';
@@ -41,8 +42,12 @@ abstract class Query
    * @param array $conditions An associative array of conditions for the WHERE clause.
    * @return $this Returns the current instance for method chaining.
    */
-  public function where(string|array $conditions, string $operation = Select::AND, string $compaction = Select::EQUALS, bool $group = false): static
+  public function where(string|array $conditions, string $operation = Select::AND , string $compaction = Select::EQUALS, bool $group = false): static
   {
+    if (empty($conditions)) {
+      return $this;
+    }
+
     if (is_array($conditions)) {
       $where = [];
       foreach ($conditions as $column => $value) {
@@ -52,16 +57,22 @@ abstract class Query
         $where[] = "{$column} {$compaction} {$paramName}";
       }
       $clauses = implode(" {$operation} ", $where);
-      $this->where[] = ($group ? "({$clauses})" : $clauses);
+      $conditions = ($group ? "({$clauses})" : $clauses);
     }
-    if (is_string($conditions)) {
+
+    if (!empty($conditions)) {
       $this->where[] = $conditions;
     }
+
     return $this;
   }
 
-  public function in(string|array $conditions, string $operation = Select::AND, bool $group = false): static
+  public function in(string|array $conditions, string $operation = Select::AND , bool $group = false): static
   {
+    if (empty($conditions)) {
+      return $this;
+    }
+
     if (is_array($conditions)) {
       $where = [];
       foreach ($conditions as $column => $value) {
@@ -75,11 +86,11 @@ abstract class Query
         $where[] = "{$column} IN({$inList})";
       }
       $clauses = implode(" {$operation} ", $where);
-      $this->where[] = ($group ? "({$clauses})" : $clauses);  
-    }
-    if (is_string($conditions)) {
+      $this->where[] = ($group ? "({$clauses})" : $clauses);
+    } elseif (is_string($conditions)) {
       $this->where[] = $conditions;
     }
+
     return $this;
   }
 

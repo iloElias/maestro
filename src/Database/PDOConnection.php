@@ -22,9 +22,7 @@ class PDOConnection
 
   /**
    * Retrieves a PDO connection instance.
-   *
    * This method returns a singleton instance of the PDO connection. If the connection has not been established yet, it will create a new one using the provided parameters or environment variables. If a PDO mock object is provided, it will be used instead.
-   *
    * @param string|null $dbSql The SQL driver (e.g., mysql, pgsql). Defaults to environment variable DB_SQL.
    * @param string|null $dbName The name of the database. Defaults to environment variable DB_NAME.
    * @param string|null $dbHost The database host. Defaults to environment variable DB_HOST.
@@ -58,7 +56,6 @@ class PDOConnection
 
   /**
    * Get an instance of the PDO connection.
-   *
    * @param \PDO|null $pdoMock Optional PDO mock object for testing.
    * @return \PDO The PDO connection instance.
    * @deprecated This method is deprecated and will be removed in a future version. Use self::get() directly instead.
