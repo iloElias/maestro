@@ -1,7 +1,7 @@
 {
     "name": "ilias/maestro",
     "type": "library",
-    "version": "1.2.5",
+    "version": "1.2.6",
     "description": "A PHP object-oriented postgres database manager",
     "keywords": [
         "postgres",

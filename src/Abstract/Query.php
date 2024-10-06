@@ -7,7 +7,6 @@ use Ilias\Maestro\Database\Expression;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException, PDO, Exception, PDOStatement;
-use function PHPUnit\Framework\isEmpty;
 
 abstract class Query
 {
@@ -15,7 +14,7 @@ abstract class Query
   protected array $parameters = [];
   protected array $where = [];
   private ?PDOStatement $stmt = null;
-  private bool $isBinded = false;
+  private bool $isBound = false;
   protected string $query = '';
   public const AND = 'AND';
   public const OR = 'OR';
@@ -38,11 +37,10 @@ abstract class Query
   /**
    * Adds WHERE conditions to the SQL query.
    * This method accepts an associative array of conditions where the key is the column name and the value is the condition value.
-   *
-   * @param array $conditions An associative array of conditions for the WHERE clause.
+   * @param string|array $conditions An associative array of conditions for the WHERE clause. Use plain text if you don't need the array resolver.
    * @return $this Returns the current instance for method chaining.
    */
-  public function where(string|array $conditions, string $operation = Select::AND , string $compaction = Select::EQUALS, bool $group = false): static
+  public function where(string|array $conditions, string $operation = self::AND , string $compaction = self::EQUALS, bool $group = false): static
   {
     if (empty($conditions)) {
       return $this;
@@ -67,7 +65,7 @@ abstract class Query
     return $this;
   }
 
-  public function in(string|array $conditions, string $operation = Select::AND , bool $group = false): static
+  public function in(string|array $conditions, string $operation = self::AND , bool $group = false): static
   {
     if (empty($conditions)) {
       return $this;
@@ -108,7 +106,7 @@ abstract class Query
       $this->parameters[$name] = $value ? Expression::TRUE : Expression::FALSE;
     } elseif (is_object($value) && is_subclass_of($value, Query::class)) {
       $this->parameters[$name] = "({$value})";
-    } elseif (is_object($value) && $value instanceof Expression) {
+    } elseif ($value instanceof Expression) {
       $this->parameters[$name] = "{$value}";
     } else {
       $value = str_replace("'", "''", $value);
@@ -174,18 +172,21 @@ abstract class Query
     }
     $this->query = $query;
     if (!empty($this->pdo) || !empty($pdo)) {
-      if (!$this->isBinded) {
+      if (!$this->isBound) {
         $stmt = $this->pdo->prepare($query);
-        $this->isBinded = true;
+        $this->isBound = true;
         $this->stmt = $stmt;
       }
     }
     return $this;
   }
 
+  /**
+   * @throws Exception
+   */
   public function execute(): array
   {
-    if (!$this->isBinded) {
+    if (!$this->isBound) {
       $this->bindParameters();
     }
     if (!empty($this->stmt)) {

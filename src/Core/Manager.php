@@ -17,12 +17,7 @@ use Ilias\Maestro\Utils\Utils;
 
 /**
  * Class Manager
- *
- * This class provides methods to create and manage a PostgreSQL database schema,
- * including creating schemas, tables, and foreign key constraints. It also provides
- * methods to insert, update, and select data from tables.
- *
- * @package Ilias\Maestro\Core
+ * This class provides methods to create and manage a PostgreSQL database schema, including creating schemas, tables, and foreign key constraints. It also provides methods to insert, update, and select data from tables.
  */
 class Manager
 {
@@ -39,7 +34,6 @@ class Manager
 
   /**
    * Create the database schema.
-   *
    * @param Database $database
    * @param bool $executeOnComplete
    * @return array
@@ -71,7 +65,6 @@ class Manager
 
   /**
    * Create a schema.
-   *
    * @param string|Schema $schema
    * @return string
    * @throws InvalidArgumentException
@@ -96,7 +89,6 @@ class Manager
 
   /**
    * Create tables for a schema.
-   *
    * @param string|Schema $schema
    * @return array
    */
@@ -118,7 +110,6 @@ class Manager
 
   /**
    * Create a table.
-   *
    * @param string $table
    * @return string
    * @throws NotFinalExceptions
@@ -180,7 +171,6 @@ class Manager
 
   /**
    * Create functions for a schema.
-   *
    * @param string|Schema $schema
    * @return array
    */

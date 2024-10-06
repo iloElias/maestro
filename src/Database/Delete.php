@@ -8,7 +8,11 @@ use Ilias\Maestro\Utils\Utils;
 class Delete extends Query
 {
   private string $table;
-  /** Sets the table from which records will be deleted. @param string $table The name of the table. @return Delete Returns the current instance for method chaining./
+  /**
+   * Sets the table from which records will be deleted.
+   * @param string $table The name of the table.
+   * @return Delete Returns the current instance for method chaining.
+   */
   public function from(string $table): Delete
   {
     $this->table = $this->validateTableName($table);

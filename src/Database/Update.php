@@ -10,14 +10,24 @@ class Update extends Query
   private $table;
   private $set = [];
 
-  /** Sets the table name for the update operation after validating it. @param string $table The name of the table to update. @return Update Returns the current instance for method chaining./
+  /**
+   * Sets the table name for the update operation after validating it.
+   * @param string $table The name of the table to update.
+   * @return Update Returns the current instance for method chaining.
+   */
   public function table(string $table): Update
   {
     $this->table = $this->validateTableName($table);
     return $this;
   }
 
-  /** Sets the value for a column or multiple columns in the update statement. @param string|array $column The column name as a string or an associative array of column-value pairs. @param mixed $value The value to set for the column. This parameter is ignored if $column is an array. @return Update Returns the current instance of the Update class. @throws \InvalidArgumentException If the column name is an integer or numeric string./
+  /**
+   * Sets the value for a column or multiple columns in the update statement.
+   * @param string|array $column The column name as a string or an associative array of column-value pairs.
+   * @param mixed $value The value to set for the column. This parameter is ignored if $column is an array.
+   * @return Update Returns the current instance of the Update class.
+   * @throws \InvalidArgumentException If the column name is an integer or numeric string.
+   */
   public function set(string|array $column, $value = null): Update
   {
     if (is_array($column)) {
