@@ -225,9 +225,9 @@ Here is what your .env file need to have:
 DB_SQL=pgsql
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=maestrodb
+DB_NAME=maestro_db
 DB_USER=postgres
-DB_PASS=dbpass
+DB_PASS=password
 ```
 
 ```php
