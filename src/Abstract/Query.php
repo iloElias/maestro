@@ -4,6 +4,7 @@ namespace Ilias\Maestro\Abstract;
 
 use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Database\Expression;
+use Ilias\Maestro\Database\PDOConnection;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException, PDO, Exception, PDOStatement;
@@ -13,6 +14,7 @@ abstract class Query
   public mixed $current = null;
   protected array $parameters = [];
   protected array $where = [];
+  private ?PDO $pdo = null;
   private ?PDOStatement $stmt = null;
   private bool $isBound = false;
   protected string $query = '';
@@ -30,8 +32,12 @@ abstract class Query
 
   public function __construct(
     protected string $behavior = Maestro::SQL_STRICT,
-    private ?PDO $pdo = null,
+    ?PDO $pdo = null
   ) {
+    if (empty($pdo)) {
+      $this->pdo = PDOConnection::get();
+    }
+    $this->pdo = $pdo;
   }
 
   /**

@@ -160,12 +160,7 @@ abstract class Table extends \stdClass
     $select = new Select();
     $select->from([static::generateAlias() => static::getTableSchemaAddress()]);
     if (!empty($prediction)) {
-      if (is_array($prediction)) {
-        $select->where($prediction);
-      }
-      if (is_string($prediction)) {
-        $select->where([$prediction]);
-      }
+      $select->where($prediction);
     }
     if (!empty($orderBy)) {
       if (is_array($orderBy)) {
