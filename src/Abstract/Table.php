@@ -157,8 +157,8 @@ abstract class Table extends \stdClass
    */
   public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100): array
   {
-    $select = new Select();
-    $select->from([static::generateAlias() => static::getTableSchemaAddress()]);
+    $select = new Select(Maestro::SQL_NO_PREDICT);
+    $select->from([static::getTableSchemaAddress()]);
     if (!empty($prediction)) {
       $select->where($prediction);
     }
