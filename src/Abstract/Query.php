@@ -35,7 +35,7 @@ abstract class Query
     ?PDO $pdo = null
   ) {
     if (empty($pdo)) {
-      $this->pdo = PDOConnection::get();
+      $pdo = PDOConnection::get();
     }
     $this->pdo = $pdo;
   }
