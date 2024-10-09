@@ -42,7 +42,7 @@ class Update extends Query
       $column = Utils::sanitizeForPostgres($column);
       $paramName = ":$column";
       $this->set[$column] = $paramName;
-      $this->parameters[$paramName] = $value;
+      $this->storeParameter($paramName, $value);
     }
     return $this;
   }
@@ -53,6 +53,5 @@ class Update extends Query
     $whereClause = implode(" AND ", $this->where);
 
     return "UPDATE {$this->table} SET $setClause" . ($whereClause ? " WHERE $whereClause" : "");
-    ;
   }
 }

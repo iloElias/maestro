@@ -20,7 +20,7 @@ class UpdateTest extends TestCase
     $update->table($table::tableName())->set('nickname', 'updated_nickname')->where($conditions);
 
     $expectedSql = "UPDATE {$table::tableName()} SET nickname = :nickname WHERE email = :where_email";
-    $expectedParams = [':nickname' => 'updated_nickname', ':where_email' => "'email@example.com'"];
+    $expectedParams = [':nickname' => "'updated_nickname'", ':where_email' => "'email@example.com'"];
 
     $this->assertEquals($expectedSql, $update->getSql());
     $this->assertEquals($expectedParams, $update->getParameters());
@@ -36,7 +36,7 @@ class UpdateTest extends TestCase
     $update->table($table::tableName())->set('nickname', 'updated_nickname')->in($conditions);
 
     $expectedSql = "UPDATE {$table::tableName()} SET nickname = :nickname WHERE id IN(:in_id_0,:in_id_1,:in_id_2)";
-    $expectedParams = [':nickname' => 'updated_nickname', ':in_id_0' => 1, ':in_id_1' => 2, ':in_id_2' => 3];
+    $expectedParams = [':nickname' => "'updated_nickname'", ':in_id_0' => 1, ':in_id_1' => 2, ':in_id_2' => 3];
 
     $this->assertEquals($expectedSql, $update->getSql());
     $this->assertEquals($expectedParams, $update->getParameters());
@@ -52,7 +52,7 @@ class UpdateTest extends TestCase
     $update->table($table::tableName())->set('nickname', 'updated_nickname')->where($conditions);
 
     $expectedSql = "UPDATE {$table::tableName()} SET nickname = :nickname WHERE email = :where_email AND active = :where_active";
-    $expectedParams = [':nickname' => 'updated_nickname', ':where_email' => "'email@example.com'", ':where_active' => true];
+    $expectedParams = [':nickname' => "'updated_nickname'", ':where_email' => "'email@example.com'", ':where_active' => "TRUE"];
 
     $this->assertEquals($expectedSql, $update->getSql());
     $this->assertEquals($expectedParams, $update->getParameters());
@@ -72,9 +72,13 @@ class UpdateTest extends TestCase
 
     $expectedSql = "UPDATE {$table::tableName()} SET nickname = :nickname WHERE id IN(:in_id_0,:in_id_1,:in_id_2) AND group_id IN(:in_group_id_0,:in_group_id_1,:in_group_id_2)";
     $expectedParams = [
-      ':nickname' => 'updated_nickname',
-      ':in_id_0' => 1, ':in_id_1' => 2, ':in_id_2' => 3,
-      ':in_group_id_0' => 10, ':in_group_id_1' => 20, ':in_group_id_2' => 30
+      ':nickname' => "'updated_nickname'",
+      ':in_id_0' => 1,
+      ':in_id_1' => 2,
+      ':in_id_2' => 3,
+      ':in_group_id_0' => 10,
+      ':in_group_id_1' => 20,
+      ':in_group_id_2' => 30
     ];
 
     $this->assertEquals($expectedSql, $update->getSql());
@@ -90,7 +94,7 @@ class UpdateTest extends TestCase
     $update->table($table::tableName())->set('nickname', 'updated_nickname');
 
     $expectedSql = "UPDATE {$table::tableName()} SET nickname = :nickname";
-    $expectedParams = [':nickname' => 'updated_nickname'];
+    $expectedParams = [':nickname' => "'updated_nickname'"];
 
     $this->assertEquals($expectedSql, $update->getSql());
     $this->assertEquals($expectedParams, $update->getParameters());
@@ -107,7 +111,7 @@ class UpdateTest extends TestCase
     $update->table($table::tableName())->set('updated_at', $date)->where($conditions);
 
     $expectedSql = "UPDATE {$table::tableName()} SET updated_at = :updated_at WHERE email = :where_email";
-    $expectedParams = [':updated_at' => $date, ':where_email' => "'email@example.com'"];
+    $expectedParams = [':updated_at' => "'{$date}'", ':where_email' => "'email@example.com'"];
 
     $this->assertEquals($expectedSql, $update->getSql());
     $this->assertEquals($expectedParams, $update->getParameters());
@@ -123,7 +127,7 @@ class UpdateTest extends TestCase
     $update->table($table::tableName())->set('nickname', 'updated_nickname')->set('active', false)->where($conditions);
 
     $expectedSql = "UPDATE {$table::tableName()} SET nickname = :nickname, active = :active WHERE email = :where_email";
-    $expectedParams = [':nickname' => 'updated_nickname', ':active' => false, ':where_email' => '\'email@example.com\''];
+    $expectedParams = [':nickname' => "'updated_nickname'", ':active' => 'FALSE', ':where_email' => "'email@example.com'"];
 
     $this->assertEquals($expectedSql, $update->getSql());
     $this->assertEquals($expectedParams, $update->getParameters());
