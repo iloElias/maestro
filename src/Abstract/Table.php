@@ -8,8 +8,9 @@ use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Database\Transaction;
 use Ilias\Maestro\Database\Update;
 use Ilias\Maestro\Utils\Utils;
+use stdClass;
 
-abstract class Table extends \stdClass
+abstract class Table extends stdClass
 {
   use Sanitizable;
 
@@ -181,7 +182,7 @@ abstract class Table extends \stdClass
           $object->{$column} = $value;
         }
       } catch (\Throwable) {
-        $object = new \stdClass();
+        $object = new stdClass();
         foreach ($row as $column => $value) {
           $object->{$column} = $value;
         }
@@ -229,7 +230,7 @@ abstract class Table extends \stdClass
    * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
    * @return mixed The fetched row or null if no row is found.
    */
-  public static function fetchRow(string|array $prediction = null, string|array $orderBy = null, bool $fetchObj = true): null|array|static
+  public static function fetchRow(string|array $prediction = null, string|array $orderBy = null, bool $fetchObj = true): null|array|static|stdClass
   {
     return self::fetchAll($prediction, $orderBy, 1, $fetchObj)[0] ?? null;
   }
