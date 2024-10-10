@@ -180,7 +180,7 @@ final class User extends Table
   public string $password;
   public Timestamp | PostgresFunction | string $createdIn = "CURRENT_TIMESTAMP";
 
-  public function __construct(
+  public function compose(
     string $username,
     string $email,
     string $password,
@@ -203,7 +203,7 @@ Explanations:
 
 - `final`: Use the final directive declaring your `Table`, `Schema` and `Database` classes. This is the application's way of keeping track of the created entities.
 - `type`: Declare all types of class attributes so that the application can better choose the equivalent data type from the database column.
-- `__construct`: The construct method is used to define the non-nullability of a database column. Add to the constructor arguments the columns that must not be null.
+- `compose`: The compose method is used to define the non-nullability of a database column. Add to the constructor arguments the columns that must not be null.
 - `default`: To declare the default value, simply add an initial value to the class attribute.
 - `custom function`: To use a postgres function as the default value, follow the previous step and add the following two typings: `<current type> | PostgresFunction | string` to the attribute type, then the text added as a value will be used as a function.
 - `unique`: Override the static `tableUniqueColumns` method to return the names of unique columns. Alternatively, use the `@unique` clause in the attribute's documentation, but note this won't work if `tableUniqueColumns` is overridden.

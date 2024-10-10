@@ -22,27 +22,4 @@ abstract class Schema extends \stdClass
     }
     return $tables;
   }
-
-  public static function dumpSchema(): array
-  {
-    $tablesMap = [];
-    $tables = self::getTables();
-    foreach ($tables as $table) {
-      $tablesMap[$table::sanitizedName()] = $table::dumpTable();
-    }
-    return $tablesMap;
-  }
-
-  public static function prettyPrint()
-  {
-    $tables = self::getTables();
-    foreach ($tables as $tableName => $tableClass) {
-      echo "\t\tTable: $tableName (Class: $tableClass)\n";
-
-      $columns = $tableClass::tableColumns();
-      foreach ($columns as $columnName => $columnType) {
-        echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
-      }
-    }
-  }
 }
