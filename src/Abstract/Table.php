@@ -5,11 +5,58 @@ namespace Ilias\Maestro\Abstract;
 use Exception;
 use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Database\Select;
+use Ilias\Maestro\Database\Transaction;
+use Ilias\Maestro\Database\Update;
 use Ilias\Maestro\Utils\Utils;
 
 abstract class Table extends \stdClass
 {
   use Sanitizable;
+
+  public function __construct(...$params)
+  {
+    foreach ($params as $key => $value) {
+      $this->{$key} = $value;
+    }
+  }
+
+  /**
+   * Saves the current state of the object to the database.
+   * This method iterates over the table columns, converts the column names to snake_case, and prepares the values for insertion or update. It then attempts to retrieve the table identifier and constructs an update query for each identifier. The update operation is executed within a transaction to ensure atomicity.
+   * @return bool Returns true if the save operation was successful, false otherwise.
+   * @throws Exception If the table has no identifier, an exception is thrown indicating that the operation is not available.
+   */
+  public function save(): bool
+  {
+    $values = [];
+    foreach (static::tableColumns() as $column => $type) {
+      $columnName = Utils::toSnakeCase($column);
+      $values[$columnName] = $this->{$column};
+    }
+    try {
+      $tableIdentifier = static::tableIdentifier(false);
+    } catch (\Throwable) {
+      throw new Exception('Table ' . static::tableFullAddress() . ' has no identifier. This operation is not available.');
+    }
+    foreach ($tableIdentifier as $name => $_) {
+      $sanitizedName = Utils::toSnakeCase($name);
+      $update = new Update();
+      $update->table(static::tableFullAddress())
+        ->set($values)
+        ->where([$sanitizedName => $this->{$name}]);
+      $transaction = new Transaction();
+      $transaction->begin();
+      try {
+        $update->execute();
+        $transaction->commit();
+        return true;
+      } catch (\Throwable) {
+        $transaction->rollback();
+        return false;
+      }
+    }
+    return false;
+  }
 
   public static function tableName(): string
   {
@@ -81,16 +128,17 @@ abstract class Table extends \stdClass
     return $uniqueColumns;
   }
 
-  final public static function tableIdentifier(): array
+  final public static function tableIdentifier(bool $snakeCase = true): array
   {
     foreach (static::tableColumns() as $name => $type) {
+      $sanitizedName = Utils::toSnakeCase($name);
       if (is_array($type)) {
         if (is_subclass_of($type[0], Identifier::class)) {
-          return [Utils::toSnakeCase($name) => "{$type[0]}"];
+          return [$snakeCase ? $sanitizedName : $name => "{$type[0]}"];
         }
       }
       if (is_subclass_of($type, Identifier::class)) {
-        return [Utils::toSnakeCase($name) => "{$type}"];
+        return [$snakeCase ? $sanitizedName : $name => "{$type}"];
       }
     }
     throw new Exception('No identifier found for table ' . static::tableFullAddress());
@@ -102,35 +150,6 @@ abstract class Table extends \stdClass
       'tableName' => static::sanitizedName(),
       'columns' => static::tableColumns()
     ];
-  }
-
-  public static function dumpTable(): array
-  {
-    return self::tableColumns();
-  }
-
-  public static function prettyPrint()
-  {
-    $columns = self::tableColumns();
-    foreach ($columns as $columnName => $columnType) {
-      echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
-    }
-  }
-
-  public static function tableUniqueColumns(): array
-  {
-    $reflection = new \ReflectionClass(static::class);
-    $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
-    $uniqueColumns = [];
-
-    foreach ($properties as $property) {
-      $docComment = $property->getDocComment();
-      if ($docComment && strpos($docComment, '@unique') !== false) {
-        $uniqueColumns[] = $property->getName();
-      }
-    }
-
-    return $uniqueColumns;
   }
 
   public static function generateAlias(array $existingAlias = []): string
@@ -148,6 +167,31 @@ abstract class Table extends \stdClass
   }
 
   /**
+   * Returns an array of objects from the given data.
+   * @param array $data
+   * @return array
+   */
+  protected static function composeTable(array $data): array
+  {
+    $objects = [];
+    foreach ($data as $row) {
+      try {
+        $object = new static(...$row);
+        foreach ($row as $column => $value) {
+          $object->{$column} = $value;
+        }
+      } catch (\Throwable) {
+        $object = new \stdClass();
+        foreach ($row as $column => $value) {
+          $object->{$column} = $value;
+        }
+      }
+      $objects[] = $object;
+    }
+    return $objects;
+  }
+
+  /**
    * Fetches all rows from the table based on the given prediction, order, and limit.
    *
    * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
@@ -155,7 +199,7 @@ abstract class Table extends \stdClass
    * @param int|string $limit The limit for the number of rows to fetch. Default is 100.
    * @return array The fetched rows as an array.
    */
-  public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100): array
+  public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100, bool $fetchObj = true): array
   {
     $select = new Select(Maestro::SQL_NO_PREDICT);
     $select->from([static::getTableSchemaAddress()]);
@@ -173,7 +217,9 @@ abstract class Table extends \stdClass
       }
     }
     $select->limit($limit);
-    return $select->bindParameters()->execute();
+    $result = $select->bindParameters()->execute();
+    $return = $fetchObj ? self::composeTable($result) : $result;
+    return $return;
   }
 
   /**
@@ -183,8 +229,8 @@ abstract class Table extends \stdClass
    * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
    * @return mixed The fetched row or null if no row is found.
    */
-  public static function fetchRow(string|array $prediction = null, string|array $orderBy = null)
+  public static function fetchRow(string|array $prediction = null, string|array $orderBy = null, bool $fetchObj = true): null|array|static
   {
-    return self::fetchAll($prediction, $orderBy, 1)[0] ?? null;
+    return self::fetchAll($prediction, $orderBy, 1, $fetchObj)[0] ?? null;
   }
 }

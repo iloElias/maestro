@@ -125,7 +125,7 @@ class Manager
     $tableName = $table::sanitizedName();
     $columns = $table::tableColumns();
     $primaryColumn = $table::tableIdentifier();
-    $uniqueColumns = $table::tableUniqueColumns();
+    $uniqueColumns = $table::getUniqueColumns();
     $notNullColumns = $this->getNotNullProperties($reflectionClass);
 
     $columnDefs = [];
@@ -246,7 +246,11 @@ class Manager
   public function getNotNullProperties(\ReflectionClass $reflectionClass): array
   {
     $properties = [];
-    $constructor = $reflectionClass->getConstructor();
+    try {
+      $constructor = $reflectionClass->getMethod('compose');
+    } catch (Throwable) {
+      $constructor = $reflectionClass->getConstructor();
+    }
     if ($constructor) {
       $params = $constructor->getParameters();
       foreach ($params as $param) {

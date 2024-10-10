@@ -158,7 +158,9 @@ class Select extends Query
     if (is_string($limit) && !is_numeric($limit)) {
       throw new \InvalidArgumentException("Limit must be a number.");
     }
-    $this->limit = "{$limit}";
+    if (!is_null($limit)) {
+      $this->limit = "{$limit}";
+    }
     return $this;
   }
 

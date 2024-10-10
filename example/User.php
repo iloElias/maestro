@@ -30,7 +30,7 @@ final class User extends Table
   public Timestamp $updatedIn;
   public Timestamp $inactivatedIn;
 
-  public function __construct(
+  public function compose(
     string $nickname,
     string $firstName,
     string $lastName,

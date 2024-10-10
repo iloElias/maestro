@@ -23,12 +23,12 @@ class Utils
     Timestamp::class => Postgres::TIMESTAMP,
     Serial::class => Postgres::SERIAL,
     Unique::class => Postgres::UUID,
-    "unknown type" => Postgres::TEXT,
+    "unknown_type" => Postgres::TEXT,
   ];
 
   public static function getPostgresType(string $phpType)
   {
-    return self::PHP_TO_POSTGRES_TYPE[$phpType] ?? self::PHP_TO_POSTGRES_TYPE['unknown type'];
+    return self::PHP_TO_POSTGRES_TYPE[$phpType] ?? self::PHP_TO_POSTGRES_TYPE['unknown_type'];
   }
 
   public static function toSnakeCase(string $text)
