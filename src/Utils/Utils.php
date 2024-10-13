@@ -3,6 +3,8 @@
 namespace Ilias\Maestro\Utils;
 
 use Ilias\Maestro\Abstract\Identifier;
+use Ilias\Maestro\Abstract\Query;
+use Ilias\Maestro\Database\Expression;
 use Ilias\Maestro\Types\Postgres;
 use Ilias\Maestro\Types\Serial;
 use Ilias\Maestro\Types\Timestamp;
@@ -70,5 +72,47 @@ class Utils
       return true;
     }
     return false;
+  }
+
+  /**
+   * Format insert value for SQL query.
+   * @param mixed $value
+   * @return string
+   */
+  public static function formatQueryValue(mixed $value): string
+  {
+    if (!is_bool($value) && in_array($value, Expression::DEFAULT_REPLACE_EXPRESSIONS)) {
+      return Expression::DEFAULT;
+    }
+    if (is_null($value)) {
+      return Expression::NULL;
+    } elseif (is_int($value) || is_float($value)) {
+      return $value;
+    } elseif (is_bool($value)) {
+      return $value ? Expression::TRUE : Expression::FALSE;
+    } elseif (is_object($value) && is_subclass_of($value, Query::class)) {
+      return "({$value})";
+    } elseif ($value instanceof Expression) {
+      return "{$value}";
+    } else {
+      $value = str_replace("'", "''", $value);
+      return "'{$value}'";
+    }
+  }
+
+  /**
+   * Format the default value for SQL table.
+   * @param mixed $value
+   * @return string
+   */
+  public static function formatDefaultExpressionValue(mixed $types, mixed $value): string
+  {
+    if (is_array($types)) {
+      if ($types[1] === Expression::class) {
+        return $value;
+      }
+      return self::formatDefaultExpressionValue($types[0], $value);
+    }
+    return self::formatQueryValue($value);
   }
 }

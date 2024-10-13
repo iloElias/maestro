@@ -8,6 +8,7 @@ use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Database\Transaction;
 use Ilias\Maestro\Database\Update;
 use Ilias\Maestro\Utils\Utils;
+use InvalidArgumentException;
 use stdClass;
 
 abstract class Table extends stdClass
@@ -19,6 +20,11 @@ abstract class Table extends stdClass
     foreach ($params as $key => $value) {
       $this->{$key} = $value;
     }
+  }
+
+  public function __toString()
+  {
+    return $this->getTableSchemaAddress();
   }
 
   /**
@@ -35,7 +41,7 @@ abstract class Table extends stdClass
       $values[$columnName] = $this->{$column};
     }
     try {
-      $tableIdentifier = static::tableIdentifier(false);
+      $tableIdentifier = static::tableIdentifiers(false);
     } catch (\Throwable) {
       throw new Exception('Table ' . static::tableFullAddress() . ' has no identifier. This operation is not available.');
     }
@@ -64,18 +70,43 @@ abstract class Table extends stdClass
     return self::sanitizedName();
   }
 
-  public function __toString()
-  {
-    return $this->getTableSchemaAddress();
-  }
-
   public static function getTableSchemaAddress(): string
   {
-    $reflection = new \ReflectionClass(static::class);
-    $schemaNamespace = explode('\\', $reflection->getProperty("schema")->getType()->getName());
-    $tableSchema = Utils::sanitizeForPostgres($schemaNamespace[array_key_last($schemaNamespace)]);
-    $tableName = self::sanitizedName();
-    return "\"{$tableSchema}\".\"{$tableName}\"";
+    return static::tableFullAddress();
+  }
+
+  private static function getUniqueColumns(): array
+  {
+    return self::tableColumnsProperties(Maestro::DOC_UNIQUE);
+  }
+
+  /**
+   * Get not null properties of a class.
+   * @param \ReflectionClass $reflectionClass
+   * @return array
+   */
+  private static function getNotNullProperties(\ReflectionClass $reflectionClass): array
+  {
+    $properties = [];
+    try {
+      $constructor = $reflectionClass->getMethod('compose');
+    } catch (\Throwable) {
+      $constructor = $reflectionClass->getConstructor();
+    }
+    if ($constructor) {
+      $params = $constructor->getParameters();
+      foreach ($params as $param) {
+        if (!$param->isOptional()) {
+          $properties[] = $param->getName();
+        }
+      }
+    }
+    foreach ($reflectionClass->name::tableColumnsProperties(Maestro::DOC_NOT_NUABLE) as $value) {
+      if (!in_array($value, $properties)) {
+        $properties[] = $value;
+      }
+    }
+    return $properties;
   }
 
   final public static function tableFullAddress(): string
@@ -108,63 +139,112 @@ abstract class Table extends stdClass
     return $columns;
   }
 
-  public static function getUniqueColumns(): array
-  {
-    return self::tableColumnsProperties(Maestro::DOC_UNIQUE);
-  }
-
   public static function tableColumnsProperties(string $atDocClause = ''): array
   {
     $reflection = new \ReflectionClass(static::class);
     $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
-    $uniqueColumns = [];
-
+    $columns = [];
     foreach ($properties as $property) {
       $docComment = $property->getDocComment();
       if ($docComment && strpos($docComment, $atDocClause) !== false) {
-        $uniqueColumns[] = $property->getName();
+        $columns[] = $property->getName();
       }
     }
-
-    return $uniqueColumns;
+    return $columns;
   }
 
-  final public static function tableIdentifier(bool $snakeCase = true): array
+  final public static function tableIdentifiers(bool $snakeCase = true): array
   {
+    $identifiers = [];
     foreach (static::tableColumns() as $name => $type) {
       $sanitizedName = Utils::toSnakeCase($name);
       if (is_array($type)) {
         if (is_subclass_of($type[0], Identifier::class)) {
-          return [$snakeCase ? $sanitizedName : $name => "{$type[0]}"];
+          $identifiers[$snakeCase ? $sanitizedName : $name] = "{$type[0]}";
         }
       }
       if (is_subclass_of($type, Identifier::class)) {
-        return [$snakeCase ? $sanitizedName : $name => "{$type}"];
+        $identifiers[$snakeCase ? $sanitizedName : $name] = "{$type}";
       }
     }
-    throw new Exception('No identifier found for table ' . static::tableFullAddress());
+    if (empty($identifiers)) { 
+      throw new Exception('No identifier found for table ' . static::tableFullAddress());
+    }
+    return $identifiers;
   }
+
+  final public static function tablePrimary(bool $snakeCase = true): array
+  {
+    foreach (static::tableIdentifiers($snakeCase) as $name => $column) {
+      return [$name => $column];
+    }
+    return [];
+  }
+
+  /**
+   * Get the column type.
+   * @param mixed $type
+   * @return string
+   */
+  private static function getColumnType(mixed $type): string
+  {
+    if (is_subclass_of($type, Table::class)) {
+      foreach ($type::tableIdentifiers() as $value) {
+        return $value::tableIdentifierReferenceType();
+      }
+    }
+    if (is_subclass_of($type, Identifier::class)) {
+      return $type::tableIdentifierType();
+    }
+    if (is_array($type)) {
+      return static::getColumnType($type[0]);
+    }
+    if (is_string($type)) {
+      return Utils::getPostgresType($type);
+    }
+    throw new InvalidArgumentException('Invalid column type provided.');
+  }
+
+  /**
+   * Get the default value of a property.
+   * @param \ReflectionClass $reflectionClass
+   * @param string $propertyName
+   * @return mixed
+   */
+  private static function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName): mixed
+  {
+    $property = $reflectionClass->getProperty($propertyName);
+    if ($property->isDefault() && $property->isPublic()) {
+      $defaultValues = $reflectionClass->getDefaultProperties();
+      return $defaultValues[$propertyName] ?? null;
+    }
+    return null;
+  }
+
 
   public static function tableCreationInfo(): array
   {
-    return [
-      'tableName' => static::sanitizedName(),
-      'columns' => static::tableColumns()
-    ];
-  }
+    $columns = [];
 
-  public static function generateAlias(array $existingAlias = []): string
-  {
-    $baseAlias = strtolower((new \ReflectionClass(static::class))->getShortName());
-    $alias = $baseAlias;
-    $counter = 1;
+    $reflectionClass = new \ReflectionClass(static::class);
+    $identifiers = static::tableIdentifiers(false);
+    $primaryColumn = static::tablePrimary(false);
+    $notNullColumns = static::getNotNullProperties($reflectionClass);
+    $uniqueColumns = static::getUniqueColumns();
+    foreach (static::tableColumns() as $name => $type) {
+      $columns[$name]['name'] = Utils::sanitizeForPostgres($name);
+      $columns[$name]['type'] = self::getColumnType($type);
 
-    while (in_array($alias, $existingAlias)) {
-      $alias = $baseAlias . $counter;
-      $counter++;
+      $defaultValue = self::getPropertyDefaultValue($reflectionClass, $name);
+      if ($defaultValue) {
+        $columns[$name]['default'] = Utils::formatDefaultExpressionValue($type, $defaultValue);
+      }
+
+      $columns[$name]['primary'] = isset($primaryColumn[$name]);
+      $columns[$name]['not_null'] = in_array($name, $notNullColumns);
+      $columns[$name]['unique'] = in_array($name, $uniqueColumns) || isset($identifiers[$name]);
     }
-
-    return $alias;
+    return $columns;
   }
 
   /**
@@ -174,16 +254,26 @@ abstract class Table extends stdClass
    */
   protected static function composeTable(array $data): array
   {
+    $columns = [];
+    foreach (static::tableColumns() as $name => $t) {
+      $columns[Utils::sanitizeForPostgres($name)] = $name;
+    }
     $objects = [];
     foreach ($data as $row) {
+      $translatedRow = [];
+      foreach ($row as $column => $value) {
+        if (isset($columns[$column])) {
+          $translatedRow[$columns[$column]] = $value;
+        }
+      }
       try {
-        $object = new static(...$row);
-        foreach ($row as $column => $value) {
+        $object = new static(...$translatedRow);
+        foreach ($translatedRow as $column => $value) {
           $object->{$column} = $value;
         }
       } catch (\Throwable) {
         $object = new stdClass();
-        foreach ($row as $column => $value) {
+        foreach ($translatedRow as $column => $value) {
           $object->{$column} = $value;
         }
       }
@@ -194,7 +284,6 @@ abstract class Table extends stdClass
 
   /**
    * Fetches all rows from the table based on the given prediction, order, and limit.
-   *
    * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
    * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
    * @param int|string $limit The limit for the number of rows to fetch. Default is 100.
@@ -225,7 +314,6 @@ abstract class Table extends stdClass
 
   /**
    * Fetches a single row from the table based on the given prediction and order.
-   *
    * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
    * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
    * @return mixed The fetched row or null if no row is found.

@@ -9,6 +9,6 @@ final class Post extends Table
 {
   public Social $schema;
   public Serial $id;
-  public User $userId;
+  public User|int $userId;
   public string $postContent;
 }

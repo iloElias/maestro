@@ -100,24 +100,7 @@ abstract class Query
 
   protected function storeParameter(string $name, mixed $value): void
   {
-    if (!is_bool($value) && in_array($value, Expression::DEFAULT_REPLACE_EXPRESSIONS)) {
-      $this->parameters[$name] = Expression::DEFAULT;
-      return;
-    }
-    if (is_null($value)) {
-      $this->parameters[$name] = Expression::NULL;
-    } elseif (is_int($value)) {
-      $this->parameters[$name] = $value;
-    } elseif (is_bool($value)) {
-      $this->parameters[$name] = $value ? Expression::TRUE : Expression::FALSE;
-    } elseif (is_object($value) && is_subclass_of($value, Query::class)) {
-      $this->parameters[$name] = "({$value})";
-    } elseif ($value instanceof Expression) {
-      $this->parameters[$name] = "{$value}";
-    } else {
-      $value = str_replace("'", "''", $value);
-      $this->parameters[$name] = "'{$value}'";
-    }
+    $this->parameters[$name] = Utils::formatQueryValue($value);
   }
 
   abstract public function getSql(): string;

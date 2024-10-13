@@ -38,12 +38,12 @@ class PDOConnection
       if ($pdoMock) {
         self::$pdo = $pdoMock;
       } else {
-        $dbSql = Helper::env("DB_SQL", $dbSql);
-        $dbName = Helper::env("DB_NAME", $dbName);
-        $dbHost = Helper::env("DB_HOST", $dbHost);
-        $dbPort = Helper::env("DB_PORT", $dbPort);
-        $dbUser = Helper::env("DB_USER", $dbUser);
-        $dbPass = Helper::env("DB_PASS", $dbPass);
+        $dbSql = $dbSql ?? Helper::env("DB_SQL");
+        $dbName = $dbName ?? Helper::env("DB_NAME");
+        $dbHost = $dbHost ?? Helper::env("DB_HOST");
+        $dbPort = $dbPort ?? Helper::env("DB_PORT");
+        $dbUser = $dbUser ?? Helper::env("DB_USER");
+        $dbPass = $dbPass ?? Helper::env("DB_PASS");
 
         $dns = "{$dbSql}:host={$dbHost};port={$dbPort};dbname={$dbName}";
         self::$pdo = new \PDO($dns, $dbUser, $dbPass);

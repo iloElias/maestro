@@ -2,17 +2,13 @@
 
 namespace Ilias\Maestro\Core;
 
-use PDO;
-use InvalidArgumentException;
-use Throwable;
+use PDO, InvalidArgumentException, Throwable;
 use Ilias\Maestro\Abstract\Database;
-use Ilias\Maestro\Abstract\Identifier;
 use Ilias\Maestro\Abstract\Query;
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Table;
 use Ilias\Maestro\Database\PDOConnection;
 use Ilias\Maestro\Exceptions\NotFinalExceptions;
-use Ilias\Maestro\Database\Expression;
 use Ilias\Maestro\Utils\Utils;
 
 /**
@@ -27,7 +23,7 @@ class Manager
   public PDO $pdo;
 
   public function __construct(
-    private string $strictType = Maestro::SQL_STRICT
+    private string $buildMode = Maestro::SQL_STRICT
   ) {
     $this->pdo = PDOConnection::get();
   }
@@ -44,9 +40,8 @@ class Manager
     $tablesSql = [];
     $constraintsSql = [];
     $functionsSql = $this->createDatabaseFunctions($database);
-    $schemas = $database::getSchemas();
 
-    foreach ($schemas as $schemaClass) {
+    foreach ($database::getSchemas() as $schemaClass) {
       $schemasSql[] = $this->createSchema($schemaClass);
       [$create, $constraints] = $this->createSchemaTables($schemaClass);
       $tablesSql = array_merge($tablesSql, $create);
@@ -77,9 +72,9 @@ class Manager
       }
       try {
         $schemaName = call_user_func("{$schema}::sanitizedName");
-        return $this->strictType === Maestro::SQL_STRICT
+        return $this->buildMode === Maestro::SQL_STRICT
           ? "CREATE SCHEMA IF NOT EXISTS \"{$schemaName}\";"
-          : "CREATE SCHEMA \"{$schemaName}\";";
+          : "CREATE SCHEMA {$schemaName};";
       } catch (Throwable) {
         throw new InvalidArgumentException('The sanitizedName method was not implemented in the provided schema class.');
       }
@@ -120,50 +115,41 @@ class Manager
       throw new NotFinalExceptions("The " . $table::sanitizedName() . " class was not identified as \"final\"");
     }
 
-    $reflectionClass = new \ReflectionClass($table);
     $schemaName = $this->schemaNameFromTable($table);
     $tableName = $table::sanitizedName();
-    $columns = $table::tableColumns();
-    $primaryColumn = $table::tableIdentifier();
-    $uniqueColumns = $table::getUniqueColumns();
-    $notNullColumns = $this->getNotNullProperties($reflectionClass);
+    $columns = $table::tableCreationInfo();
 
     $columnDefs = [];
 
-    foreach ($columns as $name => $type) {
-      $sanitizedColumnName = Utils::sanitizeForPostgres($name);
-      $isIdentifier = Utils::isIdentifier($type);
-      $columnDef = $this->strictType === Maestro::SQL_STRICT
-        ? "\"{$sanitizedColumnName}\" {$this->getColumnType($type)}"
-        : "{$sanitizedColumnName} {$this->getColumnType($type)}";
+    foreach ($columns as $column) {
+      $columnDef = $this->buildMode === Maestro::SQL_STRICT
+        ? "\"{$column['name']}\" {$column['type']}"
+        : "{$column['name']} {$column['type']}";
 
-      if (in_array($name, $notNullColumns) || $isIdentifier) {
+      if ($column['not_null'] || $column['primary']) {
         $columnDef .= ' NOT NULL';
-      } elseif ($this->strictType === Maestro::SQL_STRICT) {
+      } elseif ($this->buildMode === Maestro::SQL_STRICT) {
         $columnDef .= ' NULL';
       }
 
-      if (isset($primaryColumn[$name])) {
+      if ($column['primary']) {
         $columnDef .= ' ' . implode(' ', self::$idCreationPattern);
       }
 
-      $defaultValue = $this->getPropertyDefaultValue($reflectionClass, $name);
-      if ($defaultValue !== null) {
-        $columnDef .= is_array($type) && in_array(Expression::class, $type)
-          ? " DEFAULT {$defaultValue}"
-          : " DEFAULT {$this->formatDefaultValue($defaultValue)}";
+      if (isset($column['default'])) {
+        $columnDef .= " DEFAULT {$column['default']}";
       }
 
-      if (in_array($name, $uniqueColumns) || $isIdentifier) {
+      if ($column['unique'] || $column['primary']) {
         $columnDef .= ' UNIQUE';
       }
 
       $columnDefs[] = $columnDef;
     }
 
-    $query = $this->strictType === Maestro::SQL_STRICT
-      ? "CREATE TABLE IF NOT EXISTS \"$schemaName\".\"$tableName\""
-      : "CREATE TABLE \"$schemaName\".\"$tableName\"";
+    $query = $this->buildMode === Maestro::SQL_STRICT
+      ? "CREATE TABLE IF NOT EXISTS \"{$schemaName}\".\"{$tableName}\""
+      : "CREATE TABLE {$schemaName}.{$tableName}";
     $query .= " (\n\t" . implode(",\n\t", $columnDefs) . "\n);";
 
     return $query;
@@ -188,33 +174,7 @@ class Manager
   }
 
   /**
-   * Get the column type.
-   *
-   * @param mixed $type
-   * @return string
-   */
-  public function getColumnType(mixed $type): string
-  {
-    if (is_subclass_of($type, Table::class)) {
-      foreach ($type::tableIdentifier() as $value) {
-        return $value::tableIdentifierReferenceType();
-      }
-    }
-    if (is_subclass_of($type, Identifier::class)) {
-      return $type::tableIdentifierType();
-    }
-    if (is_array($type)) {
-      return $this->getColumnType($type[0]);
-    }
-    if (is_string($type)) {
-      return Utils::getPostgresType($type);
-    }
-    throw new InvalidArgumentException('Invalid column type provided.');
-  }
-
-  /**
    * Create foreign key constraints for a table.
-   *
    * @param string $table
    * @return array
    */
@@ -222,10 +182,8 @@ class Manager
   {
     $schemaName = $this->schemaNameFromTable($table);
     $tableName = $table::sanitizedName();
-    $columns = $table::tableColumns();
     $constraints = [];
-
-    foreach ($columns as $name => $type) {
+    foreach ($table::tableColumns() as $name => $type) {
       if (is_subclass_of($type, Table::class)) {
         $referencedTable = $type::sanitizedName();
         $referencedSchema = $this->schemaNameFromTable($type);
@@ -233,38 +191,7 @@ class Manager
         $constraints[] = "ALTER TABLE \"{$schemaName}\".\"{$tableName}\" ADD CONSTRAINT fk_{$tableName}_{$sanitizedName} FOREIGN KEY (\"{$sanitizedName}\") REFERENCES \"{$referencedSchema}\".\"{$referencedTable}\"(\"id\");";
       }
     }
-
     return $constraints;
-  }
-
-  /**
-   * Get not null properties of a class.
-   *
-   * @param \ReflectionClass $reflectionClass
-   * @return array
-   */
-  public function getNotNullProperties(\ReflectionClass $reflectionClass): array
-  {
-    $properties = [];
-    try {
-      $constructor = $reflectionClass->getMethod('compose');
-    } catch (Throwable) {
-      $constructor = $reflectionClass->getConstructor();
-    }
-    if ($constructor) {
-      $params = $constructor->getParameters();
-      foreach ($params as $param) {
-        if (!$param->isOptional()) {
-          $properties[] = $param->getName();
-        }
-      }
-    }
-    foreach ($reflectionClass->name::tableColumnsProperties(Maestro::DOC_NOT_NUABLE) as $value) {
-      if (!in_array($value, $properties)) {
-        $properties[] = $value;
-      }
-    }
-    return $properties;
   }
 
   /**
@@ -279,39 +206,6 @@ class Manager
     $schemaProperty = $reflectionClass->getProperty('schema');
     $schemaClass = $schemaProperty->getType()->getName();
     return Utils::sanitizeForPostgres((new \ReflectionClass($schemaClass))->getShortName());
-  }
-
-  /**
-   * Get the default value of a property.
-   *
-   * @param \ReflectionClass $reflectionClass
-   * @param string $propertyName
-   * @return mixed
-   */
-  public function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName): mixed
-  {
-    $property = $reflectionClass->getProperty($propertyName);
-    if ($property->isDefault() && $property->isPublic()) {
-      $defaultValues = $reflectionClass->getDefaultProperties();
-      return $defaultValues[$propertyName] ?? null;
-    }
-    return null;
-  }
-
-  /**
-   * Format the default value for SQL.
-   *
-   * @param mixed $value
-   * @return string
-   */
-  public function formatDefaultValue(mixed $value): string
-  {
-    if (is_string($value)) {
-      return "'" . addslashes($value) . "'";
-    } elseif (is_bool($value)) {
-      return $value ? 'TRUE' : 'FALSE';
-    }
-    return (string) $value;
   }
 
   /**
