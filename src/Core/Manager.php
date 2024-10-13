@@ -184,6 +184,9 @@ class Manager
     $tableName = $table::sanitizedName();
     $constraints = [];
     foreach ($table::tableColumns() as $name => $type) {
+      if (is_array($type)) {
+        $type = $type[0];
+      }
       if (is_subclass_of($type, Table::class)) {
         $referencedTable = $type::sanitizedName();
         $referencedSchema = $this->schemaNameFromTable($type);
