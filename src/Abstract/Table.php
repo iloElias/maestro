@@ -267,9 +267,14 @@ abstract class Table extends stdClass
         }
       }
       try {
-        $object = new static(...$translatedRow);
+        $reflectionClass = new \ReflectionClass(static::class);
+        $constructorParams = array_map(fn($param) => $param->getName(), $reflectionClass->getConstructor()->getParameters());
+        $filteredRow = array_filter($translatedRow, fn($key) => in_array($key, $constructorParams), ARRAY_FILTER_USE_KEY);
+        $object = new static(...$filteredRow);
         foreach ($translatedRow as $column => $value) {
-          $object->{$column} = $value;
+          if (!is_null($value)) {
+            $object->{$column} = $value;
+          }
         }
       } catch (\Throwable) {
         $object = new stdClass();
@@ -287,7 +292,7 @@ abstract class Table extends stdClass
    * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
    * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
    * @param int|string $limit The limit for the number of rows to fetch. Default is 100.
-   * @return array The fetched rows as an array.
+   * @return array|static[] The fetched rows as an array.
    */
   public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100, bool $fetchObj = true): array
   {
@@ -316,7 +321,7 @@ abstract class Table extends stdClass
    * Fetches a single row from the table based on the given prediction and order.
    * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
    * @param string|array|null $orderBy The order by criteria for the query. Can be a string or an array.
-   * @return mixed The fetched row or null if no row is found.
+   * @return null|array|static|stdClass The fetched row or null if no row is found.
    */
   public static function fetchRow(string|array $prediction = null, string|array $orderBy = null, bool $fetchObj = true): null|array|static|stdClass
   {
