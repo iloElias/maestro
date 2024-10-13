@@ -8,7 +8,7 @@ use Ilias\Maestro\Types\Serial;
 final class Post extends Table
 {
   public Social $schema;
-  public Serial $id;
+  public Serial|int $id;
   public User|int $userId;
   public string $postContent;
 }

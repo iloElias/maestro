@@ -8,7 +8,7 @@ use Ilias\Maestro\Types\Serial;
 final class TaggedUser extends Table
 {
   public Social $schema;
-  public Serial $id;
-  public Post $postId;
-  public User $userId;
+  public Serial|int $id;
+  public Post|int $postId;
+  public User|int $userId;
 }

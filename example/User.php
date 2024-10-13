@@ -3,19 +3,20 @@
 namespace Maestro\Example;
 
 use Ilias\Maestro\Abstract\Table;
+use Ilias\Maestro\Abstract\TrackableTable;
 use Ilias\Maestro\Database\Expression;
 use Ilias\Maestro\Types\Serial;
 use Ilias\Maestro\Types\Timestamp;
 use Ilias\Maestro\Types\Unique;
 
-final class User extends Table
+final class User extends TrackableTable
 {
   public Hr $schema;
   /** @primary */
   public Serial $id;
   /** @primary
    * @not_nuable */
-  public Unique | Expression | string $uuid = Expression::RANDOM_UUID;
+  public Unique|Expression|string $uuid = Expression::RANDOM_UUID;
   /** @not_nuable */
   public string $firstName;
   /** @not_nuable */
@@ -25,10 +26,6 @@ final class User extends Table
   /** @unique */
   public string $email;
   public string $password;
-  public bool $active = true;
-  public Timestamp | Expression | string $createdIn = Expression::CURRENT_TIMESTAMP;
-  public Timestamp $updatedIn;
-  public Timestamp $inactivatedIn;
 
   public function compose(
     string $nickname,

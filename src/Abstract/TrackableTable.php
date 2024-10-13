@@ -8,7 +8,7 @@ use Ilias\Maestro\Types\Timestamp;
 abstract class TrackableTable extends Table
 {
   public bool $active = true;
-  public Timestamp | Expression | string $createdIn = Expression::CURRENT_TIMESTAMP;
-  public Timestamp $updatedIn;
-  public Timestamp $inactivatedIn;
+  public Timestamp|Expression|string|null $createdIn = Expression::CURRENT_TIMESTAMP;
+  public Timestamp|string|null $updatedIn;
+  public Timestamp|string|null $inactivatedIn;
 }

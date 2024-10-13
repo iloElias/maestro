@@ -7,6 +7,7 @@ use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Database\Transaction;
 use Ilias\Maestro\Database\Update;
+use Ilias\Maestro\Types\Timestamp;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException;
 use stdClass;
@@ -19,6 +20,20 @@ abstract class Table extends stdClass
   {
     foreach ($params as $key => $value) {
       $this->{$key} = $value;
+    }
+  }
+
+  public function __set($name, $value)
+  {
+    if (property_exists(static::class, $name)) {
+      $this->{$name} = $this->bindValue($name, $value);
+    }
+  }
+
+  public function __get($name)
+  {
+    if (property_exists(static::class, $name)) {
+      return $this->{$name};
     }
   }
 
@@ -38,7 +53,9 @@ abstract class Table extends stdClass
     $values = [];
     foreach (static::tableColumns() as $column => $type) {
       $columnName = Utils::toSnakeCase($column);
-      $values[$columnName] = $this->{$column};
+      if (isset($this->{$column})) {
+        $values[$columnName] = $this->{$column};
+      }
     }
     try {
       $tableIdentifier = static::tableIdentifiers(false);
@@ -63,6 +80,14 @@ abstract class Table extends stdClass
       }
     }
     return false;
+  }
+
+  private function bindValue(string $name, mixed $value): mixed
+  {
+    if (gettype($this->{$name}) === Timestamp::class) {
+      return new Timestamp($value);
+    }
+    return $value;
   }
 
   public static function tableName(): string
@@ -167,7 +192,7 @@ abstract class Table extends stdClass
         $identifiers[$snakeCase ? $sanitizedName : $name] = "{$type}";
       }
     }
-    if (empty($identifiers)) { 
+    if (empty($identifiers)) {
       throw new Exception('No identifier found for table ' . static::tableFullAddress());
     }
     return $identifiers;
@@ -272,7 +297,7 @@ abstract class Table extends stdClass
         $filteredRow = array_filter($translatedRow, fn($key) => in_array($key, $constructorParams), ARRAY_FILTER_USE_KEY);
         $object = new static(...$filteredRow);
         foreach ($translatedRow as $column => $value) {
-          if (!is_null($value)) {
+          if (!is_null($value) && property_exists(static::class, $column)) {
             $object->{$column} = $value;
           }
         }

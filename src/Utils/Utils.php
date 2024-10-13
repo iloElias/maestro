@@ -108,7 +108,7 @@ class Utils
   public static function formatDefaultExpressionValue(mixed $types, mixed $value): string
   {
     if (is_array($types)) {
-      if ($types[1] === Expression::class) {
+      if (in_array(Expression::class, $types)) {
         return $value;
       }
       return self::formatDefaultExpressionValue($types[0], $value);

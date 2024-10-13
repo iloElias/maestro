@@ -20,6 +20,7 @@ final class Maestro
     self::DOC_NOT_NUABLE,
     self::DOC_PRIMARY,
     self::DOC_FOREIGN,
+    self::DOC_COMMENT,
   ];
 
   public const PREFER_DEFAULT = 0;
