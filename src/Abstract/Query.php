@@ -110,8 +110,12 @@ abstract class Query
     return $this->parameters;
   }
 
-  protected function validateSelectTable(array $table): array
+  protected function validateSelectTable(string|array $table): array
   {
+    if (is_string($table)) {
+      $name = $this->validateTableName($table);
+      return [Utils::toSnakeCase($name), Utils::toSnakeCase($name)];
+    }
     foreach ($table as $key => $value) {
       if (is_int($key)) {
         $name = $this->validateTableName($value);

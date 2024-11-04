@@ -22,13 +22,12 @@ class Transaction
 
   /**
    * Begins a new database transaction.
-   * @throws \Exception if a transaction is already started.
    * @return void
    */
   public function begin()
   {
     if ($this->inTransaction) {
-      throw new \Exception("Transaction already started");
+      return;
     }
 
     $this->pdo->beginTransaction();
@@ -37,13 +36,12 @@ class Transaction
 
   /**
    * Commits the current database transaction.
-   * @throws \Exception if no transaction is started.
    * @return void
    */
   public function commit()
   {
     if (!$this->inTransaction) {
-      throw new \Exception("No transaction started");
+      return;
     }
 
     $this->pdo->commit();
@@ -52,13 +50,12 @@ class Transaction
 
   /**
    * Rolls back the current database transaction.
-   * @throws \Exception if no transaction is started.
    * @return void
    */
   public function rollback()
   {
     if (!$this->inTransaction) {
-      throw new \Exception("No transaction started");
+      return;
     }
 
     $this->pdo->rollBack();

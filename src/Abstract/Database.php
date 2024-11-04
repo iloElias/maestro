@@ -48,25 +48,4 @@ abstract class Database extends \stdClass
     }
     return [self::sanitizedName() => $databaseMap];
   }
-
-  public static function prettyPrint()
-  {
-    $databaseName = self::sanitizedName();
-    echo "Database: $databaseName (Class: " . self::getDatabaseName() . ")\n";
-
-    $schemas = self::getSchemas();
-    foreach ($schemas as $schemaName => $schemaClass) {
-      echo "\tSchema: $schemaName (Class: $schemaClass)\n";
-
-      $tables = $schemaClass::getTables();
-      foreach ($tables as $tableName => $tableClass) {
-        echo "\t\tTable: $tableName (Class: $tableClass)\n";
-
-        $columns = $tableClass::tableColumns();
-        foreach ($columns as $columnName => $columnType) {
-          echo "\t\t\t- Column: $columnName (Type: $columnType)\n";
-        }
-      }
-    }
-  }
 }

@@ -43,7 +43,7 @@ class Select extends Query
    * @param array $columns An array of columns to select, with optional renaming.
    * @return Select Returns the current Select instance.
    */
-  public function from(array $table, array $columns = [Select::STAR]): Select
+  public function from(string|array $table, array $columns = [Select::STAR]): Select
   {
     [$name, $alias] = $this->validateSelectTable($table);
     $this->from = $name;
