@@ -1,9 +1,12 @@
 <?php
 
-use Ilias\Maestro\Abstract\Enum;
+namespace Maestro\Example;
 
-enum DocumentTypes
+enum DocumentTypes: string
 {
-  
+  case CPF = "cpf";
+  case CNPJ = "cnpj";
+  case CNH = "cnh";
+  case CRLV = "crlv";
+  case RNTMA = "renagro";
 }
-

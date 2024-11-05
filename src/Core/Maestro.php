@@ -25,4 +25,28 @@ final class Maestro
 
   public const PREFER_DEFAULT = 0;
   public const PREFER_DOC = 1;
+
+  private static bool $isInitialized = false;
+
+  public static array $databases = [];
+
+  /**
+   * Summary of __construct
+   * @param array[string] $databases
+   */
+  public function __construct(array $databases = [])
+  {
+    self::handle();
+  }
+
+  public static function handle()
+  {
+    if (!self::$isInitialized) {
+      $phpMaestroFilePath = implode(DIRECTORY_SEPARATOR, [__DIR__, '..', '..', 'maestro.config.php']);
+      if (file_exists($phpMaestroFilePath)) {
+        require_once $phpMaestroFilePath;
+      }
+      self::$isInitialized = true;
+    }
+  }
 }

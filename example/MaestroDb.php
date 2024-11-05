@@ -9,6 +9,8 @@ final class MaestroDb extends Database
 {
   public Hr $hr;
   public Social $social;
+
+  public DocumentTypes $documentTypes;
   
   public function __construct()
   {

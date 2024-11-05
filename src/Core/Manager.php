@@ -25,6 +25,7 @@ class Manager
   public function __construct(
     private string $buildMode = Maestro::SQL_STRICT
   ) {
+    Maestro::handle();
     $this->pdo = PDOConnection::get();
   }
 
@@ -37,6 +38,7 @@ class Manager
   public function createDatabase(Database $database, bool $executeOnComplete = true): array
   {
     $schemasSql = [];
+    $enumsSql = [];
     $tablesSql = [];
     $constraintsSql = [];
     $functionsSql = $this->createDatabaseFunctions($database);
@@ -48,7 +50,11 @@ class Manager
       $constraintsSql = array_merge($constraintsSql, ...$constraints);
     }
 
-    $sql = array_merge($functionsSql, $schemasSql, $tablesSql, $constraintsSql);
+    foreach ($database::getEnums() as $enums) {
+      $enumsSql[] = $this->createEnums($enums);
+    }
+
+    $sql = array_merge($functionsSql, $schemasSql, $enumsSql, $tablesSql, $constraintsSql);
     if ($executeOnComplete) {
       foreach ($sql as $query) {
         $this->executeQuery($this->pdo, $query);
@@ -56,6 +62,17 @@ class Manager
     }
 
     return $sql;
+  }
+
+  public function createEnums(string $enum): string
+  {
+    if (!enum_exists($enum)) {
+      throw new InvalidArgumentException("Enum class {$enum} does not exist.");
+    }
+    $spreadEnumName = explode("\\", static::class);
+    $enumName = Utils::sanitizeForPostgres($spreadEnumName[count($spreadEnumName) - 1]);
+    $enumValues = implode(",", array_map(fn($case) => "'{$case->value}'", $enum::cases()));
+    return "CREATE TYPE {$enumName} AS ENUM ({$enumValues});";
   }
 
   /**

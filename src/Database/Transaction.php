@@ -9,56 +9,56 @@ use PDO;
  */
 class Transaction
 {
-  private PDO $pdo;
-  private bool $inTransaction = false;
+  private static PDO $pdo;
+  private static bool $inTransaction = false;
 
   public function __construct(?PDO $pdo = null)
   {
     if (empty($pdo)) {
       $pdo = PDOConnection::get();
     }
-    $this->pdo = $pdo;
+    self::$pdo = $pdo;
   }
 
   /**
    * Begins a new database transaction.
    * @return void
    */
-  public function begin()
+  public static function begin(): void
   {
-    if ($this->inTransaction) {
+    if (self::$inTransaction) {
       return;
     }
 
-    $this->pdo->beginTransaction();
-    $this->inTransaction = true;
+    self::$pdo->beginTransaction();
+    self::$inTransaction = true;
   }
 
   /**
    * Commits the current database transaction.
    * @return void
    */
-  public function commit()
+  public static function commit(): void
   {
-    if (!$this->inTransaction) {
+    if (!self::$inTransaction) {
       return;
     }
 
-    $this->pdo->commit();
-    $this->inTransaction = false;
+    self::$pdo->commit();
+    self::$inTransaction = false;
   }
 
   /**
    * Rolls back the current database transaction.
    * @return void
    */
-  public function rollback()
+  public static function rollback()
   {
-    if (!$this->inTransaction) {
+    if (!self::$inTransaction) {
       return;
     }
 
-    $this->pdo->rollBack();
-    $this->inTransaction = false;
+    self::$pdo->rollBack();
+    self::$inTransaction = false;
   }
 }

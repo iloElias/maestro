@@ -29,6 +29,20 @@ abstract class Database extends \stdClass
     return $schemas;
   }
 
+  public static function getEnums(): array
+  {
+    $reflection = new \ReflectionClass(static::class);
+    $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+    $enums = [];
+    foreach ($properties as $property) {
+      $type = $property->getType();
+      if ($type instanceof \ReflectionNamedType && enum_exists($type->getName())) {
+        $enums[$property->getName()] = $type->getName();
+      }
+    }
+    return $enums;
+  }
+
   public static function declareFunction(string $name, string $returnType, string $sqlDefinition)
   {
     self::$functions[$name] = new DatabaseFunction($name, $returnType, $sqlDefinition);
