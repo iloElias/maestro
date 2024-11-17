@@ -4,7 +4,7 @@ namespace Maestro\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Ilias\Maestro\Core\Manager;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 use Maestro\Example\Hr;
 
 class ManagerTest extends TestCase
@@ -15,7 +15,7 @@ class ManagerTest extends TestCase
   protected function setUp(): void
   {
     $this->pdoMock = $this->createMock(\PDO::class);
-    PDOConnection::get(pdoMock: $this->pdoMock);
+    Connection::get(pdoMock: $this->pdoMock);
     $this->manager = new Manager();
   }
 

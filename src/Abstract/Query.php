@@ -4,7 +4,7 @@ namespace Ilias\Maestro\Abstract;
 
 use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Database\Expression;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 use Ilias\Maestro\Database\Select;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException, PDO, Exception, PDOStatement;
@@ -35,7 +35,7 @@ abstract class Query
     ?PDO $pdo = null
   ) {
     if (empty($pdo)) {
-      $pdo = PDOConnection::get();
+      $pdo = Connection::get();
     }
     $this->pdo = $pdo;
   }

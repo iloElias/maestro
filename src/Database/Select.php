@@ -39,7 +39,7 @@ class Select extends Query
 
   /**
    * Sets the table and columns for the SELECT statement.
-   * @param array $table An array containing the table name and alias. It should be provided like `[$alias => $table]`, the `$table` being the schema name and the table name separated by a dot, basically like `"{$schema}.{$table}"`. The `$table` can also be provided as class name from a Table inherited class: `$table = User::class`.
+   * @param string|array $table An array containing the table name and alias. It should be provided like `[$alias => $table]`, the `$table` being the schema name and the table name separated by a dot, basically like `"{$schema}.{$table}"`. The `$table` can also be provided as class name from a Table inherited class: `$table = User::class`.
    * @param array $columns An array of columns to select, with optional renaming.
    * @return Select Returns the current Select instance.
    */

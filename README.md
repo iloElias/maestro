@@ -88,9 +88,9 @@ The `Select` class allows you to build and execute SELECT queries.
 
 ```php
 use Ilias\Maestro\Database\Select;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 
-$select = new Select(PDOConnection::get());
+$select = new Select(Connection::get());
 $select->from(['u' => 'users'], ['u.id', 'u.name'])
        ->where(['u.active' => true])
        ->order('u.name', 'ASC')
@@ -106,12 +106,12 @@ The `Insert` class allows you to build and execute INSERT queries.
 
 ```php
 use Ilias\Maestro\Database\Insert;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 use Maestro\Example\User;
 
 $user = new User('John Doe', 'john@example.com', md5('password'), true, new Timestamp('now'));
 
-$insert = new Insert(PDOConnection::get());
+$insert = new Insert(Connection::get());
 $insert->into(User::class)
        ->values($user)
        ->returning(['id']);
@@ -126,9 +126,9 @@ The `Update` class allows you to build and execute UPDATE queries.
 
 ```php
 use Ilias\Maestro\Database\Update;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 
-$update = new Update(PDOConnection::get());
+$update = new Update(Connection::get());
 $update->table('users')
        ->set('name', 'Jane Doe')
        ->where(['id' => 1]);
@@ -143,9 +143,9 @@ The `Delete` class allows you to build and execute DELETE queries.
 
 ```php
 use Ilias\Maestro\Database\Delete;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 
-$delete = new Delete(PDOConnection::get());
+$delete = new Delete(Connection::get());
 $delete->from('users')
        ->where(['id' => 1]);
 
@@ -236,12 +236,12 @@ DB_PASS=dbpass
 require_once 'vendor/autoload.php';
 
 use Ilias\Maestro\Database\DatabaseManager;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 use Maestro\Example\Hr;
 use PDO;
 
 // Initialize PDO with environment variables
-$pdo = PDOConnection::get();
+$pdo = Connection::get();
 
 // Initialize DatabaseManager
 $dbManager = new DatabaseManager($pdo);

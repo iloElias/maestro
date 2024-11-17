@@ -4,7 +4,7 @@ namespace Ilias\Maestro\Core;
 
 use PDO;
 use Ilias\Maestro\Abstract\Database;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 use Ilias\Maestro\Utils\Utils;
 
 class Synchronizer
@@ -14,7 +14,7 @@ class Synchronizer
   public function __construct()
   {
     $this->manager = new Manager();
-    $this->pdo = PDOConnection::get();
+    $this->pdo = Connection::get();
   }
 
   public function synchronize(Database $ormDb): void

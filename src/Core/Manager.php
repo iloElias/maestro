@@ -7,7 +7,7 @@ use Ilias\Maestro\Abstract\Database;
 use Ilias\Maestro\Abstract\Query;
 use Ilias\Maestro\Abstract\Schema;
 use Ilias\Maestro\Abstract\Table;
-use Ilias\Maestro\Database\PDOConnection;
+use Ilias\Maestro\Database\Connection;
 use Ilias\Maestro\Exceptions\NotFinalExceptions;
 use Ilias\Maestro\Utils\Utils;
 
@@ -26,7 +26,7 @@ class Manager
     private string $buildMode = Maestro::SQL_STRICT
   ) {
     Maestro::handle();
-    $this->pdo = PDOConnection::get();
+    $this->pdo = Connection::get();
   }
 
   /**

@@ -4,7 +4,7 @@ namespace Ilias\Maestro\Database;
 
 use PDO;
 
-class PDOConnection
+class Connection
 {
   private static PDO $pdo;
 
@@ -30,8 +30,8 @@ class PDOConnection
       if ($pdoMock) {
         self::$pdo = $pdoMock;
       } else {
-        $dns = "{$dbSql}:host={$dbHost};port={$dbPort};dbname={$dbName}";
-        self::$pdo = new PDO($dns, $dbUser, $dbPass);
+        $dsn = "{$dbSql}:host={$dbHost};port={$dbPort};dbname={$dbName}";
+        self::$pdo = new PDO($dsn, $dbUser, $dbPass);
         self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
       }
     }

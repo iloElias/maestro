@@ -92,6 +92,9 @@ class Utils
       return $value ? Expression::TRUE : Expression::FALSE;
     } elseif (is_object($value) && is_subclass_of($value, Query::class)) {
       return "({$value})";
+    } elseif (enum_exists($value::class)) {
+      $value = str_replace("'", "''", $value->value);
+      return "'{$value}'";
     } elseif ($value instanceof Expression) {
       return "{$value}";
     } else {
