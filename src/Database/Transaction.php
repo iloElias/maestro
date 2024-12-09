@@ -9,56 +9,53 @@ use PDO;
  */
 class Transaction
 {
-  private static PDO $pdo;
-  private static bool $inTransaction = false;
+    private static PDO $pdo;
+    private static bool $inTransaction = false;
 
-  public function __construct(?PDO $pdo = null)
-  {
-    if (empty($pdo)) {
-      $pdo = Connection::get();
-    }
-    self::$pdo = $pdo;
-  }
-
-  /**
-   * Begins a new database transaction.
-   * @return void
-   */
-  public static function begin(): void
-  {
-    if (self::$inTransaction) {
-      return;
+    public function __construct(?PDO $pdo = null)
+    {
+        if (empty($pdo)) {
+            $pdo = Connection::get();
+        }
+        self::$pdo = $pdo;
     }
 
-    self::$pdo->beginTransaction();
-    self::$inTransaction = true;
-  }
+    /**
+     * Begins a new database transaction.
+     */
+    public static function begin(): void
+    {
+        if (self::$inTransaction) {
+            return;
+        }
 
-  /**
-   * Commits the current database transaction.
-   * @return void
-   */
-  public static function commit(): void
-  {
-    if (!self::$inTransaction) {
-      return;
+        self::$pdo->beginTransaction();
+        self::$inTransaction = true;
     }
 
-    self::$pdo->commit();
-    self::$inTransaction = false;
-  }
+    /**
+     * Commits the current database transaction.
+     */
+    public static function commit(): void
+    {
+        if (!self::$inTransaction) {
+            return;
+        }
 
-  /**
-   * Rolls back the current database transaction.
-   * @return void
-   */
-  public static function rollback()
-  {
-    if (!self::$inTransaction) {
-      return;
+        self::$pdo->commit();
+        self::$inTransaction = false;
     }
 
-    self::$pdo->rollBack();
-    self::$inTransaction = false;
-  }
+    /**
+     * Rolls back the current database transaction.
+     */
+    public static function rollback()
+    {
+        if (!self::$inTransaction) {
+            return;
+        }
+
+        self::$pdo->rollBack();
+        self::$inTransaction = false;
+    }
 }

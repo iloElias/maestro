@@ -1,6 +1,6 @@
 <?php
 
-require_once("./vendor/autoload.php");
+require_once('./vendor/autoload.php');
 
 // use Ilias\Maestro\Database\Delete;
 // use Ilias\Maestro\Core\Maestro;
@@ -15,7 +15,7 @@ use Maestro\Example\Post;
 use Maestro\Example\User;
 
 $coreDatabase = new Manager();
-$agrofastDB = new MaestroDb();
+$agrofastDB   = new MaestroDb();
 // new User("nickname", "email", "password", true, new Timestamp());
 
 print implode("\n", $coreDatabase->createDatabase($agrofastDB, false)) . "\n";
@@ -35,7 +35,6 @@ print implode("\n", $coreDatabase->createDatabase($agrofastDB, false)) . "\n";
 
 // $delete = new Delete(Maestro::SQL_NO_PREDICT, Connection::get());
 // $delete->from($user)->where(['id' => $result[0]['id']])->execute();
-
 
 // $where = ["teste" => null];
 

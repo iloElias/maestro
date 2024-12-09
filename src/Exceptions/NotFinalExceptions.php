@@ -2,4 +2,6 @@
 
 namespace Ilias\Maestro\Exceptions;
 
-class NotFinalExceptions extends \Exception {}
+class NotFinalExceptions extends \Exception
+{
+}

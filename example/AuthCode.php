@@ -2,21 +2,25 @@
 
 namespace Maestro\Example;
 
+use Blueprint;
 use Ilias\Maestro\Abstract\TrackableTable;
 use Ilias\Maestro\Database\Expression;
 use Ilias\Maestro\Types\Serial;
 
 final class AuthCode extends TrackableTable
 {
-  public Hr $schema;
-  /** @primary */
-  public Serial $id;
-  /** @not_nuable */
-  public User $userId;
-  public string | Expression $code = 'generate_four_digit_auth_code()';
+    public Hr $schema;
+    public int $id;
+    public int $userId;
+    public string $code;
 
-  public function compose(string $code)
-  {
-    $this->code = $code;
-  }
+    public static function compose(
+        Blueprint $blueprint,
+    ): Blueprint {
+        $blueprint->id()->primary();
+        $blueprint->integer('user_id')->required()->references(User::column('id'));
+        $blueprint->text('code')->required()->default(new Expression('generate_four_digit_auth_code()'));
+
+        return $blueprint;
+    }
 }
