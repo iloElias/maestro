@@ -4,7 +4,6 @@ require_once __DIR__ . "/vendor/autoload.php";
 
 use Ilias\Dotenv\Helper;
 use Ilias\Maestro\Database\Connection;
-use Ilias\Maestro\Core\Maestro;
 
 $dbSql = Helper::env("DB_SQL", "pgsql");
 $dbName = Helper::env("DB_NAME");
@@ -21,5 +20,3 @@ Connection::get(
   $dbUser,
   $dbPass,
 );
-
-$maestroConfig = new Maestro();

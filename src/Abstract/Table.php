@@ -11,6 +11,7 @@ use Ilias\Maestro\Types\Timestamp;
 use Ilias\Maestro\Utils\Utils;
 use InvalidArgumentException;
 use stdClass;
+use Blueprint;
 
 abstract class Table extends stdClass
 {
@@ -352,4 +353,6 @@ abstract class Table extends stdClass
   {
     return self::fetchAll($prediction, $orderBy, 1, $fetchObj)[0] ?? null;
   }
+
+  abstract public static function compose(Blueprint $blueprint): Blueprint;
 }

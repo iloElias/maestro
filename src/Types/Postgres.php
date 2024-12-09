@@ -35,4 +35,3 @@ final class Postgres
   public const VARCHAR = 'VARCHAR';
   public const XML = 'XML';
 }
-
