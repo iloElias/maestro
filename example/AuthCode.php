@@ -5,7 +5,6 @@ namespace Maestro\Example;
 use Blueprint;
 use Ilias\Maestro\Abstract\TrackableTable;
 use Ilias\Maestro\Database\Expression;
-use Ilias\Maestro\Types\Serial;
 
 final class AuthCode extends TrackableTable
 {

@@ -13,7 +13,7 @@ class Blueprint
     private Column $primaryKey;
     private array $foreignKeys = [];
 
-    public function __construct(string $name, string $schema = "public")
+    public function __construct(string $name, string $schema = 'public')
     {
         $this->name   = $name;
         $this->schema = $schema;
