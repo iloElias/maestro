@@ -1,107 +1,131 @@
-# Guia de Contribuição
+# Contribution Guide
 
-Obrigado por contribuir para este projeto! Este guia contém instruções para garantir que todas as contribuições sejam consistentes e fáceis de revisar.
+Thank you for your interest in contributing to this project! This document outlines our best practices for contributing in a way that is efficient, readable, and welcoming for everyone.
 
 ---
 
-## **1. Nomeação de Branches**
+## **1. Branch Naming Convention**
 
-Utilizamos um padrão específico para nomear branches. Siga estas diretrizes para facilitar a identificação e organização:
+Consistent naming helps keep our repository organized and easy to navigate. Please follow this branch naming format:
 
-```html
-<tipo>/<descrição-curta>
+```
+<type>/<short-description>
 ```
 
-### **Tipos de Branches**
+Where `<type>` describes the purpose of the branch, and `<short-description>` is a concise summary using hyphens to separate words (stick to English if possible).
 
-- **feature**: Para novas funcionalidades.
-  - Exemplo: `feature/login-page`
-- **fix**: Para correções de bugs.
-  - Exemplo: `fix/button-alignment`
-- **chore**: Para tarefas de manutenção ou pequenas alterações.
-  - Exemplo: `chore/update-dependencies`
-- **refactor**: Para reestruturação ou melhorias no código sem alterar a funcionalidade.
-  - Exemplo: `refactor/auth-module`
-- **test**: Para adicionar ou corrigir testes.
-  - Exemplo: `test/api-endpoints`
-- **hotfix**: Para correções críticas e urgentes.
-  - Exemplo: `hotfix/payment-error`
+### **Branch Types**
+
+- **feature**: For new features.
+  - Example: `feature/login-page`
+- **fix**: For bug fixes.
+  - Example: `fix/button-alignment`
+- **chore**: For maintenance, upgrades, or minor housekeeping.
+  - Example: `chore/update-dependencies`
+- **refactor**: For code improvements that don’t change user-facing behavior.
+  - Example: `refactor/auth-module`
+- **test**: For adding or improving tests.
+  - Example: `test/api-endpoints`
+- **hotfix**: For urgent and critical fixes.
+  - Example: `hotfix/payment-error`
+- **docs**: For documentation changes.
+  - Example: `docs/contributing-guide`
+
+If your branch doesn’t fit any of these types, pick the closest match or reach out in Discussions or Issues for clarification.
 
 ---
 
-## **2. Criação de Commits**
+## **2. Commit Message Guidelines**
 
-Os commits devem ser claros, concisos e seguir o seguinte formato:
+Commit messages should be short, descriptive, and follow this format:
 
-```html
-<tipo>(escopo): descrição breve
+```
+<type>(scope): short description in English
 ```
 
-### **Tipos de Commits**
+- `<type>`: The category of change (see list below).
+- `(scope)`: The affected part of the codebase (optional but recommended).
+- `short description`: A succinct summary of the change—imperative mood, present tense.
 
-- **feat**: Adicionar uma nova funcionalidade.
-- **fix**: Corrigir um bug.
-- **chore**: Atualizar tarefas ou dependências.
-- **docs**: Alterar ou adicionar documentação.
-- **style**: Alterações relacionadas ao estilo de código (espaçamento, formatação, etc.).
-- **refactor**: Melhorar o código sem alterar a funcionalidade.
-- **test**: Adicionar ou corrigir testes.
-- **perf**: Melhorias de desempenho.
-- **ci**: Atualizações no pipeline de integração contínua.
+### **Commit Types**
 
-### **Exemplos de Mensagens de Commit**
+- **feat**: Add a new feature.
+- **fix**: Bug fixes.
+- **chore**: Chores such as repo maintenance or build updates.
+- **docs**: Documentation-only changes.
+- **style**: Code style changes (formatting, white-space, missing semi-colons, etc.).
+- **refactor**: Code changes that neither fix bugs nor add features.
+- **test**: Adding or updating tests.
+- **perf**: Performance improvements.
+- **ci**: Continuous integration or pipeline changes.
 
-- `feat(auth): add user login functionality`
-- `fix(ui): resolve button alignment issue`
-- `chore(deps): update React to version 18`
-- `docs(readme): update contribution guidelines`
-- `refactor(api): optimize data fetching logic`
+### **Commit Message Examples**
+
+- `feat(auth): add user login flow`
+- `fix(ui): resolve crash on mobile devices`
+- `chore(deps): update React to v18`
+- `docs(readme): clarify development setup`
+- `refactor(api): restructure fetch logic for readability`
+- `style(button): standardize padding across variants`
+
+**Tip:** Use English for your commits so the global community can read and understand your contributions.
 
 ---
 
-## **3. Fluxo de Trabalho**
+## **3. Contribution Workflow**
 
-1. **Criar uma Branch**
-   - Sempre crie uma branch para suas alterações, baseada na `main` (ou outra branch de desenvolvimento primária).
-   - Exemplo:
+1. **Create a Branch**
+   - Always create a new branch for your work based on `main` (or the latest active development branch).
+   - Example:
 
      ```bash
      git checkout -b feature/login-page
      ```
 
-2. **Realizar Commits**
-   - Faça commits frequentes e claros enquanto desenvolve.
-   - Use o comando:
+2. **Develop and Commit Frequently**
+   - Commit your changes early and often.
+   - Example:
 
      ```bash
      git commit -m "feat(auth): add user authentication system"
      ```
 
-3. **Sincronizar Alterações**
-   - Sincronize suas alterações frequentemente com a branch principal para evitar conflitos:
+3. **Keep Your Branch Up-to-date**
+   - Sync with the latest upstream changes to avoid merge conflicts.
 
      ```bash
      git pull origin main
      ```
 
-4. **Abrir um Pull Request**
-   - Quando terminar as alterações:
-     - Suba sua branch:
+4. **Open a Pull Request (PR)**
+   - Push your branch to the remote repository.
 
-       ```bash
-       git push origin feature/login-page
-       ```
+     ```bash
+     git push origin feature/login-page
+     ```
 
-     - Crie um Pull Request no repositório, explicando claramente as mudanças realizadas e o motivo.
+   - Open a PR with a clear description:
+     - What changes have you made?
+     - Why are they necessary?
+     - Any context, screenshots, or steps to reproduce/testing appreciated!
 
----
-
-## **4. Boas Práticas**
-
-- **Pequenas Alterações:** Divida grandes mudanças em commits ou pull requests menores.
-- **Comentários Claros:** Descreva por que você fez as mudanças, não apenas o que mudou.
-- **Código Limpo:** Siga os padrões definidos no projeto para estilo e organização do código.
+5. **Participate in Code Review**
+   - Address feedback promptly and engage in discussion if necessary.
+   - Be respectful and collaborative in all interactions.
 
 ---
 
-Seguindo estas diretrizes, garantimos que o processo de desenvolvimento será mais organizado e colaborativo. Obrigado por contribuir! 🚀
+## **4. Best Practices**
+
+- **Small, Focused Changes:** Break large changes into smaller, independent PRs where possible. This eases review and increases merge velocity.
+- **Clear Rationale:** In your PR or commit messages, explain _why_ you made a given change, not just _what_ changed.
+- **Tests:** Add or update tests as needed to cover your changes and help prevent regressions.
+- **Consistent Style:** Align with the project's established code style and conventions. Use our formatter and linter (if available).
+- **Documentation:** Update relevant documentation when adding features or changing behavior. Well-documented code reduces friction for all contributors.
+- **Respectful Communication:** Be considerate of other contributors. Good communication leads to smoother collaboration.
+
+---
+
+By following these guidelines, we aim to ensure a streamlined, inclusive, and enjoyable development process for everyone involved.
+
+Thanks for being part of our community! 🚀

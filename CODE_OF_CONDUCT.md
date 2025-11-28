@@ -1,55 +1,57 @@
-# Código de Conduta do Projeto
+# Project Code of Conduct
 
-## Nosso Compromisso
+## Our Commitment
 
-No interesse de promover um ambiente acolhedor e inclusivo, nós, como membros, contribuidores e líderes deste projeto, comprometemo-nos a tornar a participação uma experiência livre de assédio, discriminação ou qualquer tipo de comportamento inadequado.
+In the pursuit of fostering a welcoming and inclusive community, we, as members, contributors, and maintainers, pledge to make participation in this project a harassment-free and respectful experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
-## Nossos Valores
+## Our Values
 
-- **Respeito:** Demonstrar empatia, ouvir ativamente e tratar todos com dignidade.
-- **Inclusão:** Criar um espaço onde pessoas de todas as origens, identidades e habilidades sintam-se bem-vindas.
-- **Integridade:** Agir de forma ética, transparente e responsável.
-- **Colaboração:** Fomentar um ambiente onde ideias possam ser discutidas de forma respeitosa e construtiva.
+- **Respect:** Practice empathy, active listening, and treat everyone with courtesy and dignity at all times.
+- **Inclusion:** Build a space where individuals from various backgrounds, identities, and abilities are welcomed and empowered to participate fully.
+- **Integrity:** Conduct ourselves with honesty, transparency, and accountability.
+- **Collaboration:** Encourage open, thoughtful, and constructive dialog—ideas can be discussed, debated, or challenged, but always respectfully.
+- **Learning and Growth:** Embrace curiosity, and help each other improve personally and professionally.
 
-## Comportamentos Esperados
+## Expected Behavior
 
-Os participantes deste projeto são esperados a:
+Participants in this project are expected to:
 
-- Respeitar opiniões, perspectivas e experiências diferentes.
-- Ser receptivos a críticas construtivas e oferecer feedback de maneira educada.
-- Cumprir os compromissos e comunicar com antecedência quaisquer impedimentos.
-- Abster-se de linguagem ou comportamentos discriminatórios, abusivos, intimidatórios ou ofensivos.
+- Respect differing opinions, perspectives, and experiences.
+- Respond to constructive criticism graciously; provide feedback constructively and considerately.
+- Honor commitments and communicate proactively about potential obstacles or delays.
+- Refrain from discriminatory, abusive, demeaning, hostile, or otherwise inappropriate language or behavior.
+- Help maintain a collaborative, healthy, and productive environment for all.
 
-## Comportamentos Inaceitáveis
+## Unacceptable Behavior
 
-Exemplos de comportamentos considerados assédio ou inaceitáveis incluem:
+Examples of unacceptable conduct include, but are not limited to:
 
-- Uso de linguagem ou imagens sexualizadas, avanços sexuais indesejados ou qualquer tipo de assédio.
-- Comentários ou piadas ofensivas relacionadas a raça, gênero, orientação sexual, religião ou deficiência.
-- Ataques pessoais, trolling, ou incitação de conflitos desnecessários.
-- Ações que possam intimidar ou excluir membros da comunidade.
+- The use of sexualized language or imagery, unwelcome sexual attention, or advances of any kind.
+- Making derogatory, offensive, or disrespectful comments or jokes, particularly those relating to race, gender, sexual orientation, religion, disability, or other protected characteristics.
+- Personal attacks, insults, threats, trolling, inflammatory remarks, or purposefully disrupting conversations or project activities.
+- Exclusionary tactics or actions that marginalize individuals or groups, as well as any form of intimidation or harassment.
 
-## Escopo
+## Scope
 
-Este código de conduta aplica-se a todas as interações no contexto do projeto, incluindo:
+This Code of Conduct applies to all spaces associated with the project, including but not limited to:
 
-- Repositórios, issues, pull requests e código.
-- Fóruns, listas de discussão e comunidades externas relacionadas ao projeto.
-- Eventos e interações presenciais ou online em nome do projeto.
+- Project repositories, issues, pull requests, code review, and code contributions.
+- Project forums, mailing lists, community chat services, and any related external communities.
+- All project-related events, whether virtual or in-person, and any situation where individuals are representing the project or its community.
 
-<!-- ## Relato de Violações
+## Enforcement and Reporting
 
-Se você observar ou for alvo de comportamento inaceitável, denuncie imediatamente através de um dos seguintes canais:
+If you experience or witness unacceptable behavior, we encourage you to report it promptly. Reports may be made via:
 
-- **Email de Contato:** [criar-email-de-contato]
-- **Formulário Anônimo:** [criar-link-para-formulário]
+- **Email Contact:** [murilo7456@gmail.com]
+<!-- - **Anonymous Reporting Form:** [yet-to-be-added] -->
 
-Relatos serão tratados com discrição, confidencialidade e rapidez. Reservamo-nos o direito de aplicar as medidas apropriadas, incluindo advertências, banimentos ou remoção de conteúdo inadequado. -->
+All reports will be handled discreetly, confidentially, and with urgency. The maintainers are committed to investigating and addressing all complaints in a fair and timely manner. Consequences for violations of the Code of Conduct may include warnings, temporary or permanent suspension or expulsion from the project or community, removal of content, and/or other actions as deemed appropriate.
 
-## Aplicação
+## Enforcement Responsibilities
 
-Os responsáveis pela manutenção do projeto têm o direito e a responsabilidade de fazer cumprir este Código de Conduta. A violação de qualquer diretriz será tratada de acordo com a gravidade do caso.
+Project maintainers are responsible for clarifying and enforcing this Code of Conduct. They have the right and responsibility to take corrective or preventive actions in response to any behavior they deem inappropriate, threatening, offensive, or harmful.
 
 ---
 
-A adesão a este Código de Conduta é condição obrigatória para participação no projeto. Ao contribuir, você aceita estas diretrizes e se compromete a promover um ambiente respeitoso e inclusivo.
+Participation in this project requires acceptance and adherence to this Code of Conduct. By contributing, you agree to uphold these values and help build a community defined by mutual respect, inclusively, and collaboration.

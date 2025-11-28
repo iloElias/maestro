@@ -1,14 +1,14 @@
 {
     "name": "ilias/maestro",
     "type": "library",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "description": "A PHP object-oriented postgres database manager",
     "keywords": [
         "postgres",
         "orm",
         "pgsql"
     ],
-    "homepage": "https://github.com/iloElias/maestro",
+    "homepage": "https://github.com/iloElias/choir-maestro",
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -35,9 +35,6 @@
             "email": "dhenriquearantes@gmail.com"
         }
     ],
-    "require": {
-        "ilias/dotenv": "^1.0"
-    },
     "require-dev": {
         "phpunit/phpunit": "^11.2",
         "friendsofphp/php-cs-fixer": "*"
