@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'default' => 'mysql',
+    'default' => env('DB_CONNECTION','pgsql'),
 
     'connections' => [
         'mysql' => [

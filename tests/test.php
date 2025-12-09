@@ -6,12 +6,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 App::configure(__DIR__ . '/../');
 
-$a = App::rootDir();
+$const = config('database.connections');
 
-echo var_dump($a);
-
-// Interceptor::boot();
-
-// $const = config('database.connections.pgsql');
-
-// echo var_dump($const);
+echo var_dump($const);
