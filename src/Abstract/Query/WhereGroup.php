@@ -13,16 +13,16 @@ class WhereGroup
      *
      * @var Where[]
      */
-    protected array $where;
+    protected array $wheres;
 
     /**
      * Summary of __construct.
      *
-     * @param Where[] $where
+     * @param Where[] $wheres
      */
-    public function __construct(array $where, string $operation = self::AND)
+    public function __construct(array $wheres, string $operation = self::AND)
     {
-        $this->where = $where;
+        $this->wheres = $wheres;
         $this->operation = $operation;
     }
 
@@ -35,7 +35,7 @@ class WhereGroup
      */
     public function add(array $where)
     {
-        $this->where[] = $where;
+        $this->wheres[] = $where;
     }
 
     /**
@@ -53,6 +53,6 @@ class WhereGroup
      */
     public function where(): array
     {
-        return $this->where;
+        return $this->wheres;
     }
 }

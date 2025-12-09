@@ -92,43 +92,24 @@ class Select
     /**
      * Summary of where.
      *
-     * @param string|string[]|string[][] $where
-     * @param bool                       $or
-     *
-     * TODO: use $key to define where groups identifier
-     *
+     * @param string|string[] $where
+     * 
      * @throws \InvalidArgumentException
      */
-    public function where(string|array $where, bool $or = false, ?string $key = null): Select
+    public function where(string|array $where): Select
     {
-        if ($or) {
-            if (is_string($where)) {
-                // TODO: handle
-                return $this;
-            }
-
-            return $this->whereOr($where);
-        }
-
         if (is_string($where)) {
             $this->where[] = Where::string($where);
         }
 
         if (is_array($where)) {
-            if (is_array(array_first($where))) {
-                foreach ($where as $value) {
-                    $this->where[] = Where::array($value);
-                }
-
-                return $this;
-            }
             $this->where[] = Where::array($where);
         }
 
         return $this;
     }
 
-    public function whereOr(array $where, bool $or = false): Select
+    public function whereOr(array $where, bool $or = false, ?string $key = null): Select
     {
         $wheres = [];
 
@@ -143,6 +124,29 @@ class Select
         }
 
         $this->where[] = new WhereGroup($wheres, WhereGroup::OR);
+
+        return $this;
+    }
+
+    /**
+     * Summary of whereGroup
+     * @param Where[] $wheres
+     * @param bool $or
+     * @param ?string $key
+     * @return Select
+     */
+    protected function whereGroup(array $where, bool $or = false, ?string $key = null): Select
+    {
+        $whereGroup = new WhereGroup($where, $or ? WhereGroup::OR : WhereGroup::AND);
+
+        if (is_string($key)) {
+            $this->where[$key] = $whereGroup;
+            return $this;
+        }
+
+        if (is_array($where)) {
+            $this->where[] = $whereGroup;
+        }
 
         return $this;
     }
