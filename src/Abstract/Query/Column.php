@@ -1,9 +1,10 @@
 <?php
 
-namespace Src\Abstract\Query;
+namespace Ilias\Maestro\Query;
 
 class Column
 {
+    protected string $table;
     protected string $name;
     protected ?string $alias = null;
 
@@ -15,6 +16,11 @@ class Column
         if (!is_numeric($alias)) {
             $this->alias = $alias;
         }
+    }
+
+    public function table(): string
+    {
+        return $this->table;
     }
 
     public function name(): string

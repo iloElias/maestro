@@ -2,7 +2,8 @@
 
 namespace Ilias\Maestro\Abstract\Query;
 
-use Src\Abstract\Query\Column;
+use Ilias\Maestro\Query\Column;
+use Ilias\Maestro\Query\Table;
 
 class Select
 {
@@ -17,7 +18,7 @@ class Select
     /**
      * The table to select from.
      */
-    private string $from;
+    private Table $from;
     /**
      * The alias of the table.
      *
@@ -76,7 +77,7 @@ class Select
 
     public function from(string $from): Select
     {
-        $this->from = $from;
+        $this->from = new Table($from);
 
         return $this;
     }
