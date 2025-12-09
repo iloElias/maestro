@@ -16,9 +16,9 @@ class WhereGroup
     protected array $where;
 
     /**
-     * Summary of __construct
+     * Summary of __construct.
+     *
      * @param Where[] $where
-     * @param string $operation
      */
     public function __construct(array $where, string $operation = self::AND)
     {
@@ -27,8 +27,10 @@ class WhereGroup
     }
 
     /**
-     * Summary of addWhere
+     * Summary of addWhere.
+     *
      * @param Where $where
+     *
      * @return void
      */
     public function add(array $where)
@@ -37,8 +39,7 @@ class WhereGroup
     }
 
     /**
-     * Summary of operation
-     * @return string
+     * Summary of operation.
      */
     public function operation(): string
     {
@@ -46,7 +47,8 @@ class WhereGroup
     }
 
     /**
-     * Summary of where
+     * Summary of where.
+     *
      * @return Where[]
      */
     public function where(): array

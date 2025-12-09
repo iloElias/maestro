@@ -90,7 +90,7 @@ class Where
         $operator = self::operation($where);
         $column = array_shift($where);
         $value = array_pop($where);
-        
+
         return new self($column, $operator, $value);
     }
 
@@ -125,5 +125,4 @@ class Where
 
         return $foundOperator;
     }
-
 }

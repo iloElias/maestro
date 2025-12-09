@@ -92,10 +92,10 @@ class Select
      * Summary of where.
      *
      * @param string|string[]|string[][] $where
-     * @param bool $or
+     * @param bool                       $or
      *
      * TODO: use $key to define where groups identifier
-     * 
+     *
      * @throws \InvalidArgumentException
      */
     public function where(string|array $where, bool $or = false, ?string $key = null): Select
@@ -105,6 +105,7 @@ class Select
                 // TODO: handle
                 return $this;
             }
+
             return $this->whereOr($where);
         }
 
@@ -117,6 +118,7 @@ class Select
                 foreach ($where as $value) {
                     $this->where[] = Where::array($value);
                 }
+
                 return $this;
             }
             $this->where[] = Where::array($where);
@@ -125,7 +127,6 @@ class Select
         return $this;
     }
 
-    
     public function whereOr(array $where, bool $or = false): Select
     {
         $wheres = [];
@@ -134,7 +135,7 @@ class Select
             if (is_string($value)) {
                 $wheres[] = Where::string($value);
             }
-    
+
             if (is_array($value)) {
                 $wheres[] = Where::array($value);
             }
