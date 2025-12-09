@@ -4,7 +4,7 @@ namespace Ilias\Maestro\Types;
 
 class Time extends \DateTime
 {
-    public function __construct(string $Timestamp = 'now', \DateTimeZone|null $timezone = null)
+    public function __construct(string $Timestamp = 'now', ?\DateTimeZone $timezone = null)
     {
         parent::__construct($Timestamp, $timezone);
     }

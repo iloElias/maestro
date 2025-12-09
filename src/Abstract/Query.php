@@ -5,18 +5,14 @@ namespace Ilias\Maestro\Abstract;
 use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Database\Connection;
 use Ilias\Maestro\Utils\Utils;
-use InvalidArgumentException;
-use PDO;
-use Exception;
-use PDOStatement;
 
 abstract class Query
 {
     public mixed $current              = null;
     protected array $parameters        = [];
     protected array $where             = [];
-    private ?PDO $pdo                  = null;
-    private ?PDOStatement $stmt        = null;
+    private ?\PDO $pdo                  = null;
+    private ?\PDOStatement $stmt        = null;
     private bool $isBound              = false;
     protected string $query            = '';
     public const AND                   = 'AND';
@@ -33,7 +29,7 @@ abstract class Query
 
     public function __construct(
         protected string $behavior = Maestro::SQL_STRICT,
-        ?PDO $pdo = null
+        ?\PDO $pdo = null,
     ) {
         if (empty($pdo)) {
             $pdo = Connection::get();
@@ -47,7 +43,7 @@ abstract class Query
      *
      * @param string|array $conditions An associative array of conditions for the WHERE clause. Use plain text if you don't need the array resolver.
      *
-     * @return $this Returns the current instance for method chaining.
+     * @return $this returns the current instance for method chaining
      */
     public function where(string|array $conditions, string $operation = self::AND, string $compaction = self::EQUALS, bool $group = false): static
     {
@@ -145,7 +141,7 @@ abstract class Query
     protected function validateTableName(string $table): string
     {
         if (empty($table)) {
-            throw new InvalidArgumentException('Table name cannot be empty.');
+            throw new \InvalidArgumentException('Table name cannot be empty.');
         }
 
         try {
@@ -154,7 +150,7 @@ abstract class Query
             if (!str_contains($table, '.')) {
                 switch ($this->behavior) {
                     case Maestro::SQL_STRICT:
-                        throw new InvalidArgumentException('In strict SQL mode, table names must be provided as schema.table.');
+                        throw new \InvalidArgumentException('In strict SQL mode, table names must be provided as schema.table.');
                     case Maestro::SQL_PREDICT:
                         return "public.{$table}";
                     case Maestro::SQL_NO_PREDICT:
@@ -166,7 +162,7 @@ abstract class Query
         }
     }
 
-    public function bindParameters(?PDO $pdo = null): Query
+    public function bindParameters(?\PDO $pdo = null): Query
     {
         $query = $this->getSql();
         foreach ($this->parameters as $key => $value) {
@@ -185,7 +181,7 @@ abstract class Query
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function execute(): array
     {
@@ -195,9 +191,9 @@ abstract class Query
         if (!empty($this->stmt)) {
             $this->stmt->execute();
 
-            return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $this->stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
-        throw new Exception('No PDOStatement object found.');
+        throw new \Exception('No PDOStatement object found.');
     }
 
     public function __toString(): string

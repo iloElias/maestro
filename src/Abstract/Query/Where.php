@@ -20,31 +20,25 @@ class Where
 
     /**
      * The column name.
-     *
-     * @var string
      */
     private string $column;
 
     /**
      * The comparison operator.
-     *
-     * @var string
      */
     private string $operator;
 
     /**
      * The value to compare against.
-     *
-     * @var mixed
      */
     private mixed $value;
 
     /**
      * Creates a new Where condition.
      *
-     * @param string $column          The column name
-     * @param string $operator        The comparison operator (=, !=, >, <, etc.)
-     * @param mixed  $value           The value to compare
+     * @param string $column   The column name
+     * @param string $operator The comparison operator (=, !=, >, <, etc.)
+     * @param mixed  $value    The value to compare
      */
     public function __construct(
         string $column,
@@ -58,8 +52,6 @@ class Where
 
     /**
      * Gets the column name.
-     *
-     * @return string
      */
     public function column(): string
     {
@@ -68,8 +60,6 @@ class Where
 
     /**
      * Gets the comparison operator.
-     *
-     * @return string
      */
     public function operator(): string
     {
@@ -78,12 +68,62 @@ class Where
 
     /**
      * Gets the value.
-     *
-     * @return mixed
      */
     public function value(): mixed
     {
         return $this->value;
     }
-}
 
+    public static function string(string $where): Where
+    {
+        $operator = self::operation($where);
+
+        $parts = explode($operator, $where, 2);
+        $column = trim($parts[0] ?? '');
+        $value = trim($parts[1] ?? '');
+
+        return new self($column, $operator, $value);
+    }
+
+    public static function array(array $where): Where
+    {
+        $operator = self::operation($where);
+        $column = array_shift($where);
+        $value = array_pop($where);
+        
+        return new self($column, $operator, $value);
+    }
+
+    protected static function operation(string|array $where): string
+    {
+        $operators = [
+            self::EQUALS,
+            self::NOT_EQUAL,
+            self::GREATER_THAN,
+            self::LESS_THAN,
+            self::GREATER_THAN_OR_EQUAL,
+            self::LESS_THAN_OR_EQUAL,
+            self::LIKE,
+            self::NOT_LIKE,
+            self::NOT_LIKE_OR_EQUAL,
+        ];
+
+        $foundOperator = null;
+        if (is_string($where)) {
+            foreach ($operators as $op) {
+                $pattern = '/' . preg_quote($op, '/') . '/';
+                if (preg_match($pattern, $where)) {
+                    $foundOperator = $op;
+                    break;
+                }
+            }
+        }
+
+        if ($foundOperator === null) {
+            $foundOperator = self::EQUALS;
+        }
+
+        return $foundOperator;
+    }
+
+}

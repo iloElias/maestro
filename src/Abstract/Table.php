@@ -2,6 +2,7 @@
 
 namespace Ilias\Maestro\Abstract;
 
+use Column;
 use Exception;
 use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Database\Select;
@@ -9,12 +10,8 @@ use Ilias\Maestro\Database\Transaction;
 use Ilias\Maestro\Database\Update;
 use Ilias\Maestro\Types\Timestamp;
 use Ilias\Maestro\Utils\Utils;
-use InvalidArgumentException;
-use stdClass;
-use Blueprint;
-use Column;
 
-abstract class Table extends stdClass
+abstract class Table extends \stdClass
 {
     use Sanitizable;
 
@@ -48,9 +45,9 @@ abstract class Table extends stdClass
      * Saves the current state of the object to the database.
      * This method iterates over the table columns, converts the column names to snake_case, and prepares the values for insertion or update. It then attempts to retrieve the table identifier and constructs an update query for each identifier. The update operation is executed within a transaction to ensure atomicity.
      *
-     * @return bool Returns true if the save operation was successful, false otherwise.
+     * @return bool returns true if the save operation was successful, false otherwise
      *
-     * @throws Exception If the table has no identifier, an exception is thrown indicating that the operation is not available.
+     * @throws \Exception if the table has no identifier, an exception is thrown indicating that the operation is not available
      */
     public function save(): bool
     {
@@ -64,14 +61,14 @@ abstract class Table extends stdClass
         try {
             $tableIdentifier = static::tableIdentifiers(false);
         } catch (\Throwable) {
-            throw new Exception('Table ' . static::tableFullAddress() . ' has no identifier. This operation is not available.');
+            throw new \Exception('Table ' . static::tableFullAddress() . ' has no identifier. This operation is not available.');
         }
         foreach ($tableIdentifier as $name => $_) {
             $sanitizedName = Utils::toSnakeCase($name);
             $update        = new Update();
             $update->table(static::tableFullAddress())
-              ->set($values)
-              ->where([$sanitizedName => $this->{$name}]);
+                ->set($values)
+                ->where([$sanitizedName => $this->{$name}]);
             $transaction = new Transaction();
             $transaction->begin();
             try {
@@ -91,7 +88,7 @@ abstract class Table extends stdClass
 
     private function bindValue(string $name, mixed $value): mixed
     {
-        if (gettype($this->{$name}) === Timestamp::class) {
+        if (Timestamp::class === gettype($this->{$name})) {
             return new Timestamp($value);
         }
 
@@ -115,10 +112,6 @@ abstract class Table extends stdClass
 
     /**
      * Get not null properties of a class.
-     *
-     * @param \ReflectionClass $reflectionClass
-     *
-     * @return array
      */
     private static function getNotNullProperties(\ReflectionClass $reflectionClass): array
     {
@@ -162,7 +155,7 @@ abstract class Table extends stdClass
         $columns    = [];
 
         foreach ($properties as $property) {
-            if ($property->getName() !== 'schema') {
+            if ('schema' !== $property->getName()) {
                 try {
                     $columns[$property->getName()] = $property->getType()->getName();
                 } catch (\Throwable) {
@@ -183,7 +176,7 @@ abstract class Table extends stdClass
         $columns    = [];
         foreach ($properties as $property) {
             $docComment = $property->getDocComment();
-            if ($docComment && strpos($docComment, $atDocClause) !== false) {
+            if ($docComment && false !== strpos($docComment, $atDocClause)) {
                 $columns[] = $property->getName();
             }
         }
@@ -206,7 +199,7 @@ abstract class Table extends stdClass
             }
         }
         if (empty($identifiers)) {
-            throw new Exception('No identifier found for table ' . static::tableFullAddress());
+            throw new \Exception('No identifier found for table ' . static::tableFullAddress());
         }
 
         return $identifiers;
@@ -223,10 +216,6 @@ abstract class Table extends stdClass
 
     /**
      * Get the column type.
-     *
-     * @param mixed $type
-     *
-     * @return string
      */
     private static function getColumnType(mixed $type): string
     {
@@ -244,16 +233,11 @@ abstract class Table extends stdClass
         if (is_string($type)) {
             return Utils::getPostgresType($type);
         }
-        throw new InvalidArgumentException('Invalid column type provided.');
+        throw new \InvalidArgumentException('Invalid column type provided.');
     }
 
     /**
      * Get the default value of a property.
-     *
-     * @param \ReflectionClass $reflectionClass
-     * @param string           $propertyName
-     *
-     * @return mixed
      */
     private static function getPropertyDefaultValue(\ReflectionClass $reflectionClass, string $propertyName): mixed
     {
@@ -295,10 +279,6 @@ abstract class Table extends stdClass
 
     /**
      * Returns an array of objects from the given data.
-     *
-     * @param array $data
-     *
-     * @return array
      */
     protected static function composeTable(array $data): array
     {
@@ -325,7 +305,7 @@ abstract class Table extends stdClass
                     }
                 }
             } catch (\Throwable) {
-                $object = new stdClass();
+                $object = new \stdClass();
                 foreach ($translatedRow as $column => $value) {
                     $object->{$column} = $value;
                 }
@@ -343,9 +323,9 @@ abstract class Table extends stdClass
      * @param string|array|null $orderBy    The order by criteria for the query. Can be a string or an array.
      * @param int|string        $limit      The limit for the number of rows to fetch. Default is 100.
      *
-     * @return array|static[] The fetched rows as an array.
+     * @return array|static[] the fetched rows as an array
      */
-    public static function fetchAll(string|array $prediction = null, string|array $orderBy = null, int|string $limit = 100, bool $fetchObj = true): array
+    public static function fetchAll(string|array|null $prediction = null, string|array|null $orderBy = null, int|string $limit = 100, bool $fetchObj = true): array
     {
         $select = new Select(Maestro::SQL_NO_PREDICT);
         $select->from([static::getTableSchemaAddress()]);
@@ -375,19 +355,21 @@ abstract class Table extends stdClass
      * @param string|array|null $prediction The prediction criteria for the query. Can be a string or an array.
      * @param string|array|null $orderBy    The order by criteria for the query. Can be a string or an array.
      *
-     * @return null|array|static|stdClass The fetched row or null if no row is found.
+     * @return array|static|\stdClass|null the fetched row or null if no row is found
      */
-    public static function fetchRow(string|array $prediction = null, string|array $orderBy = null, bool $fetchObj = true): null|array|static|stdClass
+    public static function fetchRow(string|array|null $prediction = null, string|array|null $orderBy = null, bool $fetchObj = true): array|static|\stdClass|null
     {
         return self::fetchAll($prediction, $orderBy, 1, $fetchObj)[0] ?? null;
     }
 
-    abstract public static function compose(Blueprint $blueprint): Blueprint;
-    public static function blueprint(): Blueprint
+    abstract public static function compose(\Blueprint $blueprint): \Blueprint;
+
+    public static function blueprint(): \Blueprint
     {
-        return static::compose(new Blueprint(self::tableName(), explode('.', self::getTableSchemaAddress())[0]));
+        return static::compose(new \Blueprint(self::tableName(), explode('.', self::getTableSchemaAddress())[0]));
     }
-    public static function column(string $column): Column
+
+    public static function column(string $column): \Column
     {
         return static::blueprint()->column($column);
     }

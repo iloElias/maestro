@@ -8,7 +8,7 @@ use PDO;
 
 class Connection
 {
-    private static PDO $pdo;
+    private static \PDO $pdo;
 
     private function __construct()
     {
@@ -24,19 +24,19 @@ class Connection
      * @param string|null $dbName  The name of the database. It will be automatically set from the environment variable `DB_DATABASE`.
      * @param string|null $dbUser  The database user. It will be automatically set from the environment variable `DB_USERNAME`.
      * @param string|null $dbPass  The database password. It will be automatically set from the environment variable `DB_PASSWORD`.
-     * @param PDO|null    $pdoMock An optional PDO mock object for testing purposes.
+     * @param \PDO|null   $pdoMock an optional PDO mock object for testing purposes
      *
-     * @return PDO The PDO connection instance.
+     * @return \PDO the PDO connection instance
      */
-    public static function get(string $dbSql = null, string $dbName = null, string $dbHost = null, string $dbPort = null, string $dbUser = null, string $dbPass = null, ?PDO $pdoMock = null): PDO
+    public static function get(?string $dbSql = null, ?string $dbName = null, ?string $dbHost = null, ?string $dbPort = null, ?string $dbUser = null, ?string $dbPass = null, ?\PDO $pdoMock = null): \PDO
     {
         $data = [
-          'DB_CONNECTION' => $dbSql,
-          'DB_HOST'       => $dbHost,
-          'DB_PORT'       => $dbPort,
-          'DB_DATABASE'   => $dbName,
-          'DB_USERNAME'   => $dbUser,
-          'DB_PASSWORD'   => $dbPass,
+            'DB_CONNECTION' => $dbSql,
+            'DB_HOST'       => $dbHost,
+            'DB_PORT'       => $dbPort,
+            'DB_DATABASE'   => $dbName,
+            'DB_USERNAME'   => $dbUser,
+            'DB_PASSWORD'   => $dbPass,
         ];
         $data = self::getEnv($data);
         if (empty(self::$pdo)) {
@@ -44,8 +44,8 @@ class Connection
                 self::$pdo = $pdoMock;
             } else {
                 $dsn       = "{$dbSql}:host={$dbHost};port={$dbPort};dbname={$dbName}";
-                self::$pdo = new PDO($dsn, $dbUser, $dbPass);
-                self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                self::$pdo = new \PDO($dsn, $dbUser, $dbPass);
+                self::$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             }
         }
 
@@ -55,13 +55,13 @@ class Connection
     /**
      * Get an instance of the PDO connection.
      *
-     * @param PDO|null $pdoMock Optional PDO mock object for testing.
+     * @param \PDO|null $pdoMock optional PDO mock object for testing
      *
-     * @return PDO The PDO connection instance.
+     * @return \PDO the PDO connection instance
      *
      * @deprecated This method is deprecated and will be removed in a future version. Use self::get() directly instead.
      */
-    public static function getInstance(?PDO $pdoMock = null): PDO
+    public static function getInstance(?\PDO $pdoMock = null): \PDO
     {
         if (!empty($pdoMock)) {
             return self::get(dbName: 'mock', pdoMock: $pdoMock);

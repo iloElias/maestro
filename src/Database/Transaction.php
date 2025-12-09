@@ -2,17 +2,15 @@
 
 namespace Ilias\Maestro\Database;
 
-use PDO;
-
 /**
  * This class provides methods to manage database transactions.
  */
 class Transaction
 {
-    private static PDO $pdo;
+    private static \PDO $pdo;
     private static bool $inTransaction = false;
 
-    public function __construct(?PDO $pdo = null)
+    public function __construct(?\PDO $pdo = null)
     {
         if (empty($pdo)) {
             $pdo = Connection::get();

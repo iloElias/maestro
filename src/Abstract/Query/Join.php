@@ -15,29 +15,21 @@ class Join
 
     /**
      * The table to join.
-     *
-     * @var string
      */
     private string $table;
 
     /**
      * The table alias.
-     *
-     * @var string|null
      */
     private ?string $alias;
 
     /**
      * The join condition (ON clause).
-     *
-     * @var string
      */
     private string $condition;
 
     /**
      * The type of join (INNER, LEFT, RIGHT, FULL).
-     *
-     * @var string
      */
     private string $type;
 
@@ -53,7 +45,7 @@ class Join
         string $table,
         string $condition,
         string $type = self::INNER,
-        ?string $alias = null
+        ?string $alias = null,
     ) {
         $this->table = $table;
         $this->condition = $condition;
@@ -63,8 +55,6 @@ class Join
 
     /**
      * Gets the table name.
-     *
-     * @return string
      */
     public function table(): string
     {
@@ -73,8 +63,6 @@ class Join
 
     /**
      * Gets the table alias.
-     *
-     * @return string|null
      */
     public function alias(): ?string
     {
@@ -83,8 +71,6 @@ class Join
 
     /**
      * Gets the join condition.
-     *
-     * @return string
      */
     public function condition(): string
     {
@@ -93,12 +79,9 @@ class Join
 
     /**
      * Gets the join type.
-     *
-     * @return string
      */
     public function type(): string
     {
         return $this->type;
     }
 }
-

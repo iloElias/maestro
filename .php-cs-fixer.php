@@ -5,6 +5,7 @@ use PhpCsFixer\Finder;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 $rules = [
+    '@Symfony' => true,
     '@PSR12' => true,
     'ordered_imports' => true,
     'no_unused_imports' => true,

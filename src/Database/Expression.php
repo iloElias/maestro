@@ -15,8 +15,6 @@ class Expression
 
     /**
      * The raw SQL expression.
-     *
-     * @var string
      */
     private string $expression;
 
@@ -32,8 +30,6 @@ class Expression
 
     /**
      * Returns the raw SQL expression as a string.
-     *
-     * @return string
      */
     public function __toString(): string
     {
@@ -42,8 +38,6 @@ class Expression
 
     /**
      * Creates an expression for CURRENT_TIMESTAMP.
-     *
-     * @return Expression
      */
     public static function currentTimestamp(): Expression
     {
@@ -52,12 +46,9 @@ class Expression
 
     /**
      * Creates an expression for NOW().
-     *
-     * @return Expression
      */
     public static function now(): Expression
     {
         return new self(self::NOW);
     }
 }
-

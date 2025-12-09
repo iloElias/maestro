@@ -6,9 +6,10 @@ class Column
 {
     protected string $name;
     protected ?string $alias = null;
+
     public function __construct(
         string $name,
-        ?string $alias
+        ?string $alias,
     ) {
         $this->name = $name;
         if (!is_numeric($alias)) {
