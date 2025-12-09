@@ -6,15 +6,8 @@ use Ilias\Maestro\Abstract\Query;
 use Ilias\Maestro\Core\Maestro;
 use Ilias\Maestro\Utils\Utils;
 
-class Select extends Query
+class Select
 {
-    public const STAR  = '*';
-    public const INNER = 'INNER';
-    public const LEFT  = 'LEFT';
-    public const RIGHT = 'RIGHT';
-    public const ASC   = 'ASC';
-    public const DESC  = 'DESC';
-
     private string $from;
     private ?string $alias;
     private array $columns = [];
